@@ -2,13 +2,19 @@
 
 Dokumen ini menjelaskan struktur arsitektur teknis, desain database, pola desain (design pattern) yang digunakan, serta alur sistem pada aplikasi inOffice Persuratan.
 
+**Terakhir diupdate**: 10 Juni 2026 — Fase 2 (Push Notification & Real-time) selesai.
+
 ## 1. Stack Teknologi
 
 Aplikasi ini dibangun menggunakan arsitektur monolitik modern berbasis ekosistem PHP dengan spesifikasi berikut:
-- **Framework**: Laravel 11 (PHP 8.3+)
-- **Database**: PostgreSQL (Production) / SQLite (Development lokal)
+- **Framework**: Laravel 13 (PHP 8.3+)
+- **Database**: MySQL (Development) / PostgreSQL (Production)
 - **Frontend**: Blade Templating Engine + Vanilla CSS dengan arsitektur UI berbasis komponen custom.
 - **Server**: PHP Development Server (Local) / Nginx/Apache (Production).
+- **Push Notification**: Firebase Cloud Messaging (FCM) via `kreait/laravel-firebase`
+- **Real-time**: Laravel Reverb (WebSocket server)
+- **API**: RESTful API v1 dengan Sanctum token authentication
+- **PWA**: Service Worker + manifest.json untuk akses mobile browser
 
 ## 2. Struktur Direktori Utama
 
@@ -19,25 +25,54 @@ inoffice/
 ├── app/
 │   ├── Http/
 │   │   ├── Controllers/
-│   │   │   ├── Admin/         # Manajemen Master Data (User, Role, UnitKerja)
-│   │   │   ├── Auth/          # Autentikasi kustom
-│   │   │   └── ...            # SuratMasuk, SuratKeluar, Disposisi, Laporan
-│   │   ├── Middleware/        # RBAC (CheckRole) & Audit Logging (ActivityLogger)
-│   ├── Models/                # Entitas Eloquent dan definisi relasi
-│   ├── Services/              # Business logic (mis. NomorSuratService)
+│   │   │   ├── Admin/              # Manajemen Master Data (User, Role, UnitKerja)
+│   │   │   ├── Api/V1/             # REST API Controllers (BARU - Fase 1)
+│   │   │   │   ├── AuthController.php
+│   │   │   │   ├── DashboardApiController.php
+│   │   │   │   ├── SuratMasukApiController.php
+│   │   │   │   ├── SuratKeluarApiController.php
+│   │   │   │   ├── DisposisiApiController.php
+│   │   │   │   ├── NotifikasiApiController.php
+│   │   │   │   ├── LaporanApiController.php
+│   │   │   │   └── UserApiController.php
+│   │   │   ├── Auth/               # Autentikasi kustom
+│   │   │   └── ...                 # SuratMasuk, SuratKeluar, Disposisi, Laporan
+│   │   ├── Middleware/             # RBAC (CheckRole) & Audit Logging (ActivityLogger)
+│   │   └── Resources/              # API Response Transformers (BARU - Fase 1)
+│   ├── Models/                     # Entitas Eloquent dan definisi relasi
+│   ├── Services/                   # Business logic
+│   │   ├── NomorSuratService.php   # Penomoran surat otomatis (pessimistic locking)
+│   │   └── FcmNotificationService.php  # Push notification via FCM (BARU - Fase 2)
+│   └── Events/                     # Broadcasting events (BARU - Fase 2)
+│       ├── SuratMasukCreated.php
+│       ├── DisposisiBaru.php
+│       └── LaporanDiterima.php
 ├── database/
-│   ├── migrations/            # Skema database terstruktur berdasarkan urutan dependensi
-│   ├── seeders/               # Data master awal (Role, UnitKerja, Akun Default)
+│   ├── migrations/                 # Skema database terstruktur berdasarkan urutan dependensi
+│   └── seeders/                    # Data master awal (Role, UnitKerja, Akun Default)
 ├── resources/
-│   ├── views/
-│   │   ├── admin/             # View area admin
-│   │   ├── disposisi/         # View modul disposisi
-│   │   ├── laporan/           # View dashboard laporan
-│   │   ├── layouts/           # Template dasar (app.blade.php) dengan sidebar & topbar
-│   │   ├── surat-keluar/      # View modul surat keluar
-│   │   └── surat-masuk/       # View modul surat masuk
+│   └── views/
+│       ├── admin/                  # View area admin
+│       ├── disposisi/              # View modul disposisi
+│       ├── draft/                  # View modul draft surat
+│       ├── laporan/                # View dashboard laporan
+│       ├── layouts/                # Template dasar (app.blade.php) dengan sidebar & topbar
+│       ├── surat-keluar/           # View modul surat keluar
+│       └── surat-masuk/            # View modul surat masuk
 ├── routes/
-│   └── web.php                # Definisi routing, middleware grouping
+│   ├── web.php                     # Definisi routing web (session-based)
+│   └── api.php                     # Definisi routing API v1 (token-based) (BARU - Fase 1)
+├── config/
+│   ├── firebase.php                # Firebase config (BARU - Fase 2)
+│   └── sanctum.php                 # Sanctum config (BARU - Fase 1)
+├── public/
+│   ├── manifest.json               # PWA manifest (BARU - Fase 1)
+│   ├── sw.js                       # Service Worker (BARU - Fase 1)
+│   └── icons/                      # PWA icons (BARU - Fase 1)
+└── storage/
+    └── app/
+        └── firebase/
+            └── service-account.json  # Firebase credentials placeholder (BARU - Fase 2)
 ```
 
 ## 3. Desain Database (Schema)
@@ -62,6 +97,12 @@ Sistem database dinormalisasi dengan relasi relasional kuat. Tabel utama meliput
    - `notifikasi`: Notifikasi in-app untuk pengguna (surat baru, disposisi, laporan).
    - `log_aktivitas`: Rekam jejak audit (Audit Trail) semua aksi krusial pengguna.
    - `nomor_surat_counter`: Tabel *atomic counter* khusus untuk pembuatan nomor surat otomatis tanpa tabrakan.
+   - `users.fcm_token`: Kolom untuk menyimpan Firebase Cloud Messaging device token (multi-device, JSON array).
+
+5. **Sistem Notifikasi & Real-time** (BARU - Fase 2)
+   - **FCM Push Notification**: Terintegrasi di 4 titik — disposisi baru, surat masuk baru, laporan disposisi, disposisi diteruskan.
+   - **Laravel Reverb**: WebSocket server untuk real-time broadcasting.
+   - **Event Classes**: `SuratMasukCreated`, `DisposisiBaru`, `LaporanDiterima` — broadcast ke private channels.
 
 ## 4. Pola Desain (Design Patterns) & Praktik Terbaik
 
@@ -79,6 +120,20 @@ Aktivitas pengguna direkam transparan menggunakan middleware khusus yang mencata
 
 ### 4.4. UI Component Architecture (Vanilla CSS)
 Aplikasi tidak bergantung pada CSS framework eksternal besar (Tailwind/Bootstrap). Semua gaya CSS dirancang khusus dengan metodologi *CSS Variables* (`--primary`, `--text`, `--border`) di dalam file master (layout). Ini menghasilkan aplikasi yang memuat gaya *instan*, interaksi sangat cepat (*snappy*), namun memiliki estetika *Enterprise Premium*.
+
+### 4.5. FCM Push Notification Service (BARU - Fase 2)
+Notifikasi push dikirim ke device mobile melalui Firebase Cloud Messaging. Service ini menangani:
+- **Multi-device support**: Token disimpan sebagai JSON array di `users.fcm_token`
+- **Graceful degradation**: Jika FCM gagal, notifikasi in-app tetap berjalan
+- **4 titik integrasi**: Disposisi baru, surat masuk baru, laporan disposisi, disposisi diteruskan
+*Lokasi: `app/Services/FcmNotificationService.php`*
+
+### 4.6. Real-time Broadcasting (BARU - Fase 2)
+Laravel Reverb digunakan sebagai WebSocket server untuk real-time update. Event classes mengimplementasikan `ShouldBroadcast` dan mengirim ke private channels:
+- `SuratMasukCreated` → channel `pimpinan` dan `admin`
+- `DisposisiBaru` → channel `user.{id}` per penerima
+- `LaporanDiterima` → channel `user.{id}` pemberi disposisi
+*Lokasi: `app/Events/`*
 
 ## 5. Alur Data Utama (Data Flows)
 
@@ -98,3 +153,31 @@ Aplikasi tidak bergantung pada CSS framework eksternal besar (Tailwind/Bootstrap
 ## 6. Persyaratan Eksekusi
 - Direktori `storage/app/public` harus di-*symlink* ke folder `public/storage` (`php artisan storage:link`) agar file scan yang diunggah dapat diakses.
 - Ekstensi PHP yang dibutuhkan: `pdo_pgsql` / `pdo_sqlite`, `fileinfo` (untuk validasi mime-type upload file).
+
+## 7. Arsitektur API & Mobile (BARU - Fase 1 & 2)
+
+### 7.1 API Layer
+- **Authentication**: Laravel Sanctum token-based (`auth:sanctum` middleware)
+- **Versioning**: Prefix `/api/v1` dengan namespace `App\Http\Controllers\Api\V1`
+- **Response Format**: API Resources untuk transformasi data konsisten
+- **Rate Limiting**: `throttle:api` middleware
+- **CORS**: Konfigurasi untuk mobile app domain
+
+### 7.2 Push Notification (FCM)
+- **Package**: `kreait/laravel-firebase ^7.2`
+- **Credentials**: `storage/app/firebase/service-account.json` (placeholder)
+- **Token Management**: Multi-device via JSON array di `users.fcm_token`
+- **Endpoints**:
+  - `POST /api/v1/auth/fcm-token` — Register device token
+  - `DELETE /api/v1/auth/fcm-token` — Unregister device token
+
+### 7.3 Real-time Broadcasting
+- **Server**: Laravel Reverb (`laravel/reverb ^1.10`)
+- **Connection**: `BROADCAST_CONNECTION=log` (default), ganti ke `reverb` untuk production
+- **Channels**: Private channels (`pimpinan`, `admin`, `user.{id}`)
+- **Start Command**: `php artisan reverb:start`
+
+### 7.4 PWA (Progressive Web App)
+- **Manifest**: `public/manifest.json` — app name, icons, theme color
+- **Service Worker**: `public/sw.js` — cache static assets
+- **Icons**: `public/icons/icon-192.png`, `public/icons/icon-512.png`

@@ -21,6 +21,8 @@ Route::prefix('v1')->group(function () {
 
         Route::post('auth/logout', [AuthController::class, 'logout'])->name('api.auth.logout');
         Route::get('auth/me',     [AuthController::class, 'me'])->name('api.auth.me');
+        Route::post('auth/fcm-token', [AuthController::class, 'registerFcmToken'])->name('api.auth.fcm-token');
+        Route::delete('auth/fcm-token', [AuthController::class, 'unregisterFcmToken'])->name('api.auth.fcm-token.delete');
 
         // ── Dashboard ───────────────────────────────────────────────────────
         Route::prefix('dashboard')->name('api.dashboard.')->group(function () {

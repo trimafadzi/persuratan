@@ -9,6 +9,7 @@ use App\Models\SuratMasuk;
 use App\Models\User;
 use App\Models\Notifikasi;
 use App\Models\LogAktivitas;
+use App\Services\FcmNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -93,9 +94,11 @@ class DisposisiApiController extends Controller
         $disposisi->penerima()->attach($penerimaData);
 
         // Update status surat menjadi didisposisi
-        SuratMasuk::find($validated['surat_masuk_id'])->update(['status' => 'didisposisi']);
+        $suratMasuk = SuratMasuk::find($validated['surat_masuk_id']);
+        $suratMasuk->update(['status' => 'didisposisi']);
 
         // Kirim notifikasi ke penerima
+        $fcmService = app(FcmNotificationService::class);
         foreach ($validated['penerima_ids'] as $userId) {
             Notifikasi::create([
                 'user_id'     => $userId,
@@ -105,6 +108,12 @@ class DisposisiApiController extends Controller
                 'entity_type' => 'Disposisi',
                 'entity_id'   => $disposisi->id,
             ]);
+
+            // Push notification via FCM
+            $penerima = User::find($userId);
+            if ($penerima) {
+                $fcmService->notifyDisposisiBaru($penerima, $suratMasuk->perihal, $disposisi->id);
+            }
         }
 
         LogAktivitas::create([
@@ -184,6 +193,7 @@ class DisposisiApiController extends Controller
 
         $disposisi->update(['status' => 'diteruskan']);
 
+        $fcmService = app(FcmNotificationService::class);
         foreach ($validated['penerima_ids'] as $userId) {
             Notifikasi::create([
                 'user_id'     => $userId,
@@ -193,6 +203,12 @@ class DisposisiApiController extends Controller
                 'entity_type' => 'Disposisi',
                 'entity_id'   => $child->id,
             ]);
+
+            // Push notification via FCM
+            $penerima = User::find($userId);
+            if ($penerima) {
+                $fcmService->notifyDisposisiDiteruskan($penerima, $disposisi->suratMasuk->perihal, $child->id);
+            }
         }
 
         $child->load(['suratMasuk', 'pemberi', 'penerima']);
@@ -241,6 +257,13 @@ class DisposisiApiController extends Controller
             'entity_type' => 'Disposisi',
             'entity_id'   => $disposisi->id,
         ]);
+
+        // Push notification via FCM
+        $pemberiDisposisi = User::find($disposisi->dari_user_id);
+        if ($pemberiDisposisi) {
+            $fcmService = app(FcmNotificationService::class);
+            $fcmService->notifyLaporanDisposisi($pemberiDisposisi, $disposisi->suratMasuk->perihal, $laporan->id);
+        }
 
         return response()->json([
             'message'    => 'Laporan berhasil dikirim.',

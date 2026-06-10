@@ -7,6 +7,7 @@ use App\Models\SuratMasuk;
 use App\Models\User;
 use App\Models\LogAktivitas;
 use App\Models\Notifikasi;
+use App\Services\FcmNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -88,9 +89,11 @@ class DisposisiController extends Controller
         $disposisi->penerima()->attach($penerimaData);
 
         // Update status surat menjadi didisposisi
-        SuratMasuk::find($validated['surat_masuk_id'])->update(['status' => 'didisposisi']);
+        $suratMasuk = SuratMasuk::find($validated['surat_masuk_id']);
+        $suratMasuk->update(['status' => 'didisposisi']);
 
         // Kirim notifikasi ke penerima
+        $fcmService = app(FcmNotificationService::class);
         foreach ($validated['penerima_ids'] as $userId) {
             Notifikasi::create([
                 'user_id'     => $userId,
@@ -100,6 +103,12 @@ class DisposisiController extends Controller
                 'entity_type' => 'Disposisi',
                 'entity_id'   => $disposisi->id,
             ]);
+
+            // Push notification via FCM
+            $penerima = User::find($userId);
+            if ($penerima) {
+                $fcmService->notifyDisposisiBaru($penerima, $suratMasuk->perihal, $disposisi->id);
+            }
         }
 
         LogAktivitas::create([
@@ -165,12 +174,19 @@ class DisposisiController extends Controller
 
         $disposisi->update(['status' => 'diteruskan']);
 
+        $fcmService = app(FcmNotificationService::class);
         foreach ($validated['penerima_ids'] as $userId) {
             Notifikasi::create([
                 'user_id' => $userId, 'judul' => 'Disposisi Diteruskan',
                 'pesan'   => 'Anda menerima disposisi lanjutan dari ' . Auth::user()->display_name,
                 'tipe' => 'disposisi', 'entity_type' => 'Disposisi', 'entity_id' => $child->id,
             ]);
+
+            // Push notification via FCM
+            $penerima = User::find($userId);
+            if ($penerima) {
+                $fcmService->notifyDisposisiDiteruskan($penerima, $disposisi->suratMasuk->perihal, $child->id);
+            }
         }
 
         return redirect()->route('disposisi.show', $child->id)
@@ -203,6 +219,13 @@ class DisposisiController extends Controller
             'pesan'   => Auth::user()->display_name . ' telah mengirim laporan pelaksanaan.',
             'tipe' => 'laporan', 'entity_type' => 'Disposisi', 'entity_id' => $disposisi->id,
         ]);
+
+        // Push notification via FCM
+        $pemberiDisposisi = User::find($disposisi->dari_user_id);
+        if ($pemberiDisposisi) {
+            $fcmService = app(FcmNotificationService::class);
+            $fcmService->notifyLaporanDisposisi($pemberiDisposisi, $disposisi->suratMasuk->perihal, $laporan->id);
+        }
 
         return back()->with('success', 'Laporan berhasil dikirim.');
     }

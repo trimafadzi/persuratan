@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
+use App\Services\FcmNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -80,6 +81,46 @@ class AuthController extends Controller
 
         return response()->json([
             'data' => new UserResource($user),
+        ]);
+    }
+
+    /**
+     * POST /api/v1/auth/fcm-token
+     * Register FCM device token untuk push notification.
+     */
+    public function registerFcmToken(Request $request, FcmNotificationService $fcmService): JsonResponse
+    {
+        $request->validate([
+            'fcm_token' => 'required|string',
+        ]);
+
+        $user = $request->user();
+        $registered = $fcmService->registerToken($user, $request->fcm_token);
+
+        return response()->json([
+            'message' => $registered
+                ? 'FCM token berhasil didaftarkan.'
+                : 'FCM token sudah terdaftar.',
+        ]);
+    }
+
+    /**
+     * DELETE /api/v1/auth/fcm-token
+     * Unregister FCM device token.
+     */
+    public function unregisterFcmToken(Request $request, FcmNotificationService $fcmService): JsonResponse
+    {
+        $request->validate([
+            'fcm_token' => 'required|string',
+        ]);
+
+        $user = $request->user();
+        $unregistered = $fcmService->unregisterToken($user, $request->fcm_token);
+
+        return response()->json([
+            'message' => $unregistered
+                ? 'FCM token berhasil dihapus.'
+                : 'FCM token tidak ditemukan.',
         ]);
     }
 }

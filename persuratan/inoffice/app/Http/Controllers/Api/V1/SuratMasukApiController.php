@@ -6,7 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\SuratMasukResource;
 use App\Http\Resources\SuratMasukCollection;
 use App\Models\SuratMasuk;
+use App\Models\User;
+use App\Models\Notifikasi;
 use App\Models\LogAktivitas;
+use App\Services\FcmNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -103,6 +106,25 @@ class SuratMasukApiController extends Controller
             'user_agent'  => $request->userAgent(),
             'timestamp'   => now(),
         ]);
+
+        // Notifikasi ke pimpinan (role: pimpinan, direktur, superadmin)
+        $pimpinan = User::whereHas('roles', function ($q) {
+            $q->whereIn('slug', ['pimpinan', 'direktur', 'superadmin']);
+        })->where('is_active', true)->get();
+
+        $fcmService = app(FcmNotificationService::class);
+        foreach ($pimpinan as $p) {
+            Notifikasi::create([
+                'user_id'     => $p->id,
+                'judul'       => 'Surat Masuk Baru',
+                'pesan'       => "Surat masuk baru: {$surat->perihal}",
+                'tipe'        => 'surat_masuk',
+                'entity_type' => 'SuratMasuk',
+                'entity_id'   => $surat->id,
+            ]);
+
+            $fcmService->notifySuratMasukBaru($p, $surat->perihal, $surat->id);
+        }
 
         $surat->load(['creator', 'unitKerja']);
 
