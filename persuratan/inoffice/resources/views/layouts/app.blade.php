@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="user-id" content="{{ auth()->id() }}">
+    <meta name="user-role" content="{{ auth()->user()->roles->first()->slug ?? '' }}">
     <title>@yield('title', 'Dashboard') — inOffice RSU UKI</title>
     <meta name="description" content="Sistem Persuratan & Disposisi Digital RSU Universitas Kristen Indonesia">
 
@@ -652,7 +654,9 @@
                 <button class="notif-btn" title="Notifikasi" onclick="toggleNotifDropdown(event)" style="border: 1px solid var(--border); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; color: var(--text-muted); font-size: 18px; transition: all .2s; position: relative;">
                     <i class="bi bi-bell"></i>
                     @if(($unreadNotificationsCount ?? 0) > 0)
-                        <span class="notif-dot" style="position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; border: 2px solid #fff;"></span>
+                        <span id="notifBadge" style="position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; background: var(--accent); color: #fff; border-radius: 999px; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 5px; border: 2px solid #fff;">{{ $unreadNotificationsCount }}</span>
+                    @else
+                        <span id="notifBadge" style="display: none;"></span>
                     @endif
                 </button>
                 
@@ -666,7 +670,7 @@
                             </span>
                         @endif
                     </div>
-                    <div style="max-height: 280px; overflow-y: auto;">
+                    <div class="notif-list" style="max-height: 280px; overflow-y: auto;">
                         @forelse($latestNotifications ?? [] as $notif)
                             <a href="{{ route('notifikasi.read', $notif->id) }}" style="display: flex; gap: 10px; padding: 12px 16px; border-bottom: 1px solid #f1f5f9; text-decoration: none; color: inherit; transition: background .15s; {{ !$notif->is_read ? 'background:#eff6ff;' : '' }}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='{{ !$notif->is_read ? '#eff6ff' : '#fff' }}'">
                                 <div style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;
@@ -732,6 +736,8 @@ document.addEventListener('click', function(event) {
     }
 });
 </script>
+
+@vite(['resources/js/app.js', 'resources/js/echo.js'])
 
 @stack('scripts')
 

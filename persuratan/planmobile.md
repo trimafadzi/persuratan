@@ -238,7 +238,7 @@
   - [x] `SuratMasukCreated` — broadcast ke channel `pimpinan` dan `admin`
   - [x] `DisposisiBaru` — broadcast ke channel `user.{id}` per penerima
   - [x] `LaporanDiterima` — broadcast ke channel `user.{id}` pemberi disposisi
-- [ ] Frontend listen via Echo (untuk PWA)
+- [x] Frontend listen via Echo (untuk PWA) — Echo + Reverb client terintegrasi, toast notif real-time
 - [x] Konfigurasi `BROADCAST_CONNECTION` di `.env`
 
 #### 2.3 Testing Fase 2
@@ -522,15 +522,15 @@ Minggu 12   │░░░░░░░░░░░░░░░░│ 🔲 Fase 4B:
 
 ## 8. Progress Tracking
 
-### Overall Progress: `40%`
+### Overall Progress: `42%`
 
 | Fase | Status | Progress |
 |---|---|---|
 | Fase 1: API Layer + PWA | ✅ Completed | `28/28` tasks |
-| Fase 2: Push Notification | ✅ Completed | `14/14` tasks *(code selesai, butuh Firebase project untuk testing device)* |
+| Fase 2: Push Notification | ✅ Completed | `15/16` tasks *(code selesai, butuh Firebase project untuk testing device)* |
 | Fase 3: React Native App | 🔲 Not Started | `0/45` tasks |
 | Fase 4: Build & Deploy | 🔲 Not Started | `0/15` tasks |
-| **Total** | | **`42/102` tasks** |
+| **Total** | | **`43/104` tasks** |
 
 ### Legend
 - 🔲 Not Started
