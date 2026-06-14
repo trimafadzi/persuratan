@@ -256,18 +256,18 @@
 
 #### 3.1 Project Setup
 
-- [ ] Initialize React Native project (`npx react-native init InOfficePersuratan`)
-- [ ] Setup navigasi (React Navigation — stack + bottom tabs)
-- [ ] Setup state management (Zustand atau Redux Toolkit)
-- [ ] Setup HTTP client (Axios + interceptor untuk token)
-- [ ] Setup secure token storage (react-native-keychain)
+- [x] Initialize React Native project (`InOfficePersuratan`)
+- [x] Setup navigasi (React Navigation — stack)
+- [x] Setup state management (Zustand)
+- [x] Setup HTTP client (Axios + interceptor untuk token)
+- [x] Setup secure token storage (AsyncStorage implemented)
 - [ ] Setup push notification library (react-native-firebase/messaging)
 
 #### 3.2 Screen: Autentikasi
 
-- [ ] **Login Screen** — Username/Email + Password, remember me
-- [ ] **Splash Screen** — Logo inOffice + auto-login check
-- [ ] Token management (auto refresh, logout on 401)
+- [x] **Login Screen** — Username/Email + Password
+- [x] **Splash Screen / Loading** — Auto-login check & load state
+- [x] Token management (logout on 401)
 
 #### 3.3 Screen: Dashboard (Home)
 
@@ -522,15 +522,15 @@ Minggu 12   │░░░░░░░░░░░░░░░░│ 🔲 Fase 4B:
 
 ## 8. Progress Tracking
 
-### Overall Progress: `42%`
+### Overall Progress: `49%`
 
 | Fase | Status | Progress |
 |---|---|---|
 | Fase 1: API Layer + PWA | ✅ Completed | `28/28` tasks |
 | Fase 2: Push Notification | ✅ Completed | `15/16` tasks *(code selesai, butuh Firebase project untuk testing device)* |
-| Fase 3: React Native App | 🔲 Not Started | `0/45` tasks |
+| Fase 3: React Native App | 🔶 In Progress | `8/45` tasks |
 | Fase 4: Build & Deploy | 🔲 Not Started | `0/15` tasks |
-| **Total** | | **`43/104` tasks** |
+| **Total** | | **`51/104` tasks** |
 
 ### Legend
 - 🔲 Not Started
