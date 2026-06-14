@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
@@ -10,7 +10,7 @@ import {
   SafeAreaView,
   StatusBar,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { apiClient } from '../api/client';
 import { useAuthStore } from '../store/authStore';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../theme/theme';
@@ -40,6 +40,7 @@ export default function DashboardScreen() {
   const { user } = useAuthStore();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentSurat, setRecentSurat] = useState<RecentSurat[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -47,13 +48,15 @@ export default function DashboardScreen() {
   const fetchData = useCallback(async () => {
     try {
       setErrorMsg('');
-      const [statsRes, recentRes] = await Promise.all([
+      const [statsRes, recentRes, unreadRes] = await Promise.all([
         apiClient.get('/dashboard/stats'),
         apiClient.get('/dashboard/surat-terbaru'),
+        apiClient.get('/notifikasi/unread-count'),
       ]);
 
       setStats(statsRes.data.data);
       setRecentSurat(recentRes.data.data);
+      setUnreadCount(unreadRes.data.data.count);
     } catch (e) {
       console.error(e);
       setErrorMsg('Gagal memuat data dari server.');
@@ -63,9 +66,11 @@ export default function DashboardScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, [fetchData])
+  );
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -126,8 +131,27 @@ export default function DashboardScreen() {
           <Text style={styles.welcomeText}>Halo, {user?.nama_lengkap || 'User'}</Text>
           <Text style={styles.roleText}>{user?.roles?.[0]?.nama_role || 'Pegawai'}</Text>
         </View>
-        <View style={styles.hospitalBadge}>
-          <Text style={styles.hospitalText}>RSU UKI</Text>
+        <View style={styles.headerActions}>
+          <TouchableOpacity 
+            style={styles.headerIconBtn} 
+            onPress={() => navigation.navigate('Notifikasi')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.headerIconText}>🔔</Text>
+            {unreadCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{unreadCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.headerIconBtn, { marginLeft: SPACING.md }]} 
+            onPress={() => navigation.navigate('Laporan')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.headerIconText}>📊</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -455,5 +479,41 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     textTransform: 'uppercase',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerIconBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: COLORS.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    position: 'relative',
+  },
+  headerIconText: {
+    fontSize: 18,
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: COLORS.danger,
+    borderRadius: 9,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 3,
+  },
+  badgeText: {
+    color: COLORS.white,
+    fontSize: 9,
+    fontWeight: '800',
+    textAlign: 'center',
   },
 });

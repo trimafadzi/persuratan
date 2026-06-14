@@ -54,6 +54,18 @@ export default function ProfilScreen() {
           </View>
         </View>
 
+        {/* Security Section */}
+        <View style={styles.detailsSection}>
+          <Text style={styles.sectionTitle}>Keamanan</Text>
+          
+          <View style={styles.detailRowColumn}>
+            <Text style={styles.detailLabel}>Kata Sandi (Password)</Text>
+            <Text style={styles.securityHelpText}>
+              Untuk alasan keamanan, perubahan kata sandi dapat dilakukan secara mandiri melalui Portal Web inOffice RSU UKI.
+            </Text>
+          </View>
+        </View>
+
         {/* App Info Section */}
         <View style={styles.detailsSection}>
           <Text style={styles.sectionTitle}>Tentang Aplikasi</Text>
@@ -188,5 +200,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: COLORS.white,
+  },
+  detailRowColumn: {
+    paddingVertical: SPACING.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.background,
+  },
+  securityHelpText: {
+    fontSize: 12,
+    color: COLORS.textMuted,
+    lineHeight: 18,
+    marginTop: 4,
   },
 });

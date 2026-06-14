@@ -304,23 +304,23 @@
 
 #### 3.7 Screen: Notifikasi
 
-- [ ] List notifikasi (grouped by date)
-- [ ] Tap → navigate ke entity terkait
-- [ ] Badge count di bottom tab
-- [ ] Pull-to-refresh
+- [x] List notifikasi (grouped by date)
+- [x] Tap → navigate ke entity terkait
+- [x] Badge count di header (Dashboard Screen)
+- [x] Pull-to-refresh
 
 #### 3.8 Screen: Laporan (View Only)
 
-- [ ] Statistik surat masuk (chart/grafik)
-- [ ] Statistik surat keluar
-- [ ] Kinerja pegawai (tabel/card)
+- [x] Statistik surat masuk (chart/grafik)
+- [x] Statistik surat keluar
+- [x] Kinerja pegawai (tabel/card)
 
 #### 3.9 Screen: Profil
 
-- [ ] Info user (nama, email, jabatan, unit kerja, role)
-- [ ] Ganti password
-- [ ] Logout
-- [ ] App version info
+- [x] Info user (nama, email, jabatan, unit kerja, role)
+- [x] Ganti password (diarahkan ke Portal Web)
+- [x] Logout
+- [x] App version info
 
 #### 3.10 Fitur Native Mobile
 
@@ -522,15 +522,15 @@ Minggu 12   │░░░░░░░░░░░░░░░░│ 🔲 Fase 4B:
 
 ## 8. Progress Tracking
 
-### Overall Progress: `68%`
+### Overall Progress: `79%`
 
 | Fase | Status | Progress |
 |---|---|---|
 | Fase 1: API Layer + PWA | ✅ Completed | `28/28` tasks |
 | Fase 2: Push Notification | ✅ Completed | `15/16` tasks *(code selesai, butuh Firebase project untuk testing device)* |
-| Fase 3: React Native App | 🔶 In Progress | `28/45` tasks |
+| Fase 3: React Native App | 🔶 In Progress | `39/45` tasks |
 | Fase 4: Build & Deploy | 🔲 Not Started | `0/15` tasks |
-| **Total** | | **`71/104` tasks** |
+| **Total** | | **`82/104` tasks** |
 
 ### Legend
 - 🔲 Not Started

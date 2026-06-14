@@ -6,10 +6,14 @@ import { useAuthStore } from '../store/authStore';
 import { COLORS } from '../theme/theme';
 import LoginScreen from '../screens/LoginScreen';
 import MainTabNavigator from './MainTabNavigator';
+import NotifikasiScreen from '../screens/NotifikasiScreen';
+import LaporanScreen from '../screens/LaporanScreen';
 
 export type RootStackParamList = {
   Login: undefined;
   Dashboard: undefined;
+  Notifikasi: undefined;
+  Laporan: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -38,7 +42,11 @@ export default function AppNavigator() {
         }}
       >
         {isAuthenticated ? (
-          <Stack.Screen name="Dashboard" component={MainTabNavigator} />
+          <>
+            <Stack.Screen name="Dashboard" component={MainTabNavigator} />
+            <Stack.Screen name="Notifikasi" component={NotifikasiScreen} />
+            <Stack.Screen name="Laporan" component={LaporanScreen} />
+          </>
         ) : (
           <Stack.Screen name="Login" component={LoginScreen} />
         )}
