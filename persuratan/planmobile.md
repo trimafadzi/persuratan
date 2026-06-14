@@ -287,9 +287,9 @@
 
 #### 3.5 Screen: Surat Keluar
 
-- [ ] List surat keluar (search, filter)
-- [ ] Detail surat keluar (preview file, nomor otomatis)
-- [ ] Form input surat keluar
+- [x] List surat keluar (search, filter)
+- [x] Detail surat keluar (preview file, nomor otomatis)
+- [x] Form input surat keluar
 
 #### 3.6 Screen: Disposisi
 
@@ -522,15 +522,15 @@ Minggu 12   │░░░░░░░░░░░░░░░░│ 🔲 Fase 4B:
 
 ## 8. Progress Tracking
 
-### Overall Progress: `58%`
+### Overall Progress: `61%`
 
 | Fase | Status | Progress |
 |---|---|---|
 | Fase 1: API Layer + PWA | ✅ Completed | `28/28` tasks |
 | Fase 2: Push Notification | ✅ Completed | `15/16` tasks *(code selesai, butuh Firebase project untuk testing device)* |
-| Fase 3: React Native App | 🔶 In Progress | `17/45` tasks |
+| Fase 3: React Native App | 🔶 In Progress | `20/45` tasks |
 | Fase 4: Build & Deploy | 🔲 Not Started | `0/15` tasks |
-| **Total** | | **`60/104` tasks** |
+| **Total** | | **`63/104` tasks** |
 
 ### Legend
 - 🔲 Not Started

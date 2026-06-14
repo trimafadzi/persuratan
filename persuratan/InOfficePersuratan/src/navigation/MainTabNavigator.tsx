@@ -4,12 +4,14 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { COLORS } from '../theme/theme';
 import DashboardScreen from '../screens/DashboardScreen';
 import SuratMasukNavigator from './SuratMasukNavigator';
+import SuratKeluarNavigator from './SuratKeluarNavigator';
 import DisposisiScreen from '../screens/DisposisiScreen';
 import ProfilScreen from '../screens/ProfilScreen';
 
 export type MainTabParamList = {
   DashboardTab: undefined;
   SuratMasukTab: undefined;
+  SuratKeluarTab: undefined;
   DisposisiTab: undefined;
   ProfilTab: undefined;
 };
@@ -53,6 +55,14 @@ export default function MainTabNavigator() {
         options={{
           tabBarLabel: 'Surat Masuk',
           tabBarIcon: ({ focused }: { focused: boolean }) => <TabIcon focused={focused} icon="📬" />,
+        }}
+      />
+      <Tab.Screen
+        name="SuratKeluarTab"
+        component={SuratKeluarNavigator}
+        options={{
+          tabBarLabel: 'Surat Keluar',
+          tabBarIcon: ({ focused }: { focused: boolean }) => <TabIcon focused={focused} icon="📤" />,
         }}
       />
       <Tab.Screen
