@@ -5,7 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuthStore } from '../store/authStore';
 import { COLORS } from '../theme/theme';
 import LoginScreen from '../screens/LoginScreen';
-import DashboardScreen from '../screens/DashboardScreen';
+import MainTabNavigator from './MainTabNavigator';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -38,7 +38,7 @@ export default function AppNavigator() {
         }}
       >
         {isAuthenticated ? (
-          <Stack.Screen name="Dashboard" component={DashboardScreen} />
+          <Stack.Screen name="Dashboard" component={MainTabNavigator} />
         ) : (
           <Stack.Screen name="Login" component={LoginScreen} />
         )}

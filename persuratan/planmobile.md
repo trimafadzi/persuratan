@@ -271,19 +271,19 @@
 
 #### 3.3 Screen: Dashboard (Home)
 
-- [ ] Stat cards (surat belum dibaca, disposisi pending, deadline, selesai)
-- [ ] Surat masuk terbaru (5 items, tap to detail)
-- [ ] Deadline minggu ini (list, color-coded urgency)
-- [ ] Quick action buttons (+ Surat, + Disposisi)
-- [ ] Pull-to-refresh
+- [x] Stat cards (surat belum dibaca, disposisi pending, deadline, selesai)
+- [x] Surat masuk terbaru (5 items, tap to detail)
+- [ ] Deadline minggu ini (list, color-coded urgency) — Fase 3B
+- [x] Quick action buttons (navigate to Surat Masuk list)
+- [x] Pull-to-refresh
 
 #### 3.4 Screen: Surat Masuk
 
-- [ ] List surat masuk (infinite scroll, search, filter sifat/status)
-- [ ] Detail surat masuk (metadata, file preview/download, timeline status)
-- [ ] Form input surat masuk (camera capture + file picker)
-- [ ] Swipe action: swipe right → tandai dibaca
-- [ ] Status color dots (merah/kuning/biru/hijau)
+- [x] List surat masuk (infinite scroll, search, filter sifat/status)
+- [x] Detail surat masuk (metadata, open file preview, timeline status)
+- [x] Form input surat masuk (file picker & gallery image picker)
+- [x] Aksi tandai dibaca (explicit action)
+- [x] Status color dots (merah/kuning/biru/hijau)
 
 #### 3.5 Screen: Surat Keluar
 
@@ -522,15 +522,15 @@ Minggu 12   │░░░░░░░░░░░░░░░░│ 🔲 Fase 4B:
 
 ## 8. Progress Tracking
 
-### Overall Progress: `49%`
+### Overall Progress: `58%`
 
 | Fase | Status | Progress |
 |---|---|---|
 | Fase 1: API Layer + PWA | ✅ Completed | `28/28` tasks |
 | Fase 2: Push Notification | ✅ Completed | `15/16` tasks *(code selesai, butuh Firebase project untuk testing device)* |
-| Fase 3: React Native App | 🔶 In Progress | `8/45` tasks |
+| Fase 3: React Native App | 🔶 In Progress | `17/45` tasks |
 | Fase 4: Build & Deploy | 🔲 Not Started | `0/15` tasks |
-| **Total** | | **`51/104` tasks** |
+| **Total** | | **`60/104` tasks** |
 
 ### Legend
 - 🔲 Not Started
