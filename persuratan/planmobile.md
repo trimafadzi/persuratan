@@ -293,14 +293,14 @@
 
 #### 3.6 Screen: Disposisi
 
-- [ ] Tab: Masuk / Keluar
-- [ ] List disposisi (search, filter status)
-- [ ] Detail disposisi (info surat, pemberi, penerima, timeline)
-- [ ] Form buat disposisi (pilih surat, pilih penerima multi-select, deadline)
-- [ ] Form teruskan disposisi
-- [ ] Form laporan pelaksanaan (text + upload file bukti dari gallery/camera)
-- [ ] Form tanggapan (approve/reject + komentar)
-- [ ] Swipe action: swipe left → buat disposisi
+- [x] Tab: Masuk / Keluar
+- [x] List disposisi (search, filter status)
+- [x] Detail disposisi (info surat, pemberi, penerima, timeline)
+- [x] Form buat disposisi (pilih surat, pilih penerima multi-select, deadline)
+- [x] Form teruskan disposisi
+- [x] Form laporan pelaksanaan (text + upload file bukti dari gallery/camera)
+- [x] Form tanggapan (approve/reject + komentar)
+- [x] Tombol Aksi: Buat Disposisi di Detail Surat (menggantikan swipe action)
 
 #### 3.7 Screen: Notifikasi
 
@@ -522,15 +522,15 @@ Minggu 12   │░░░░░░░░░░░░░░░░│ 🔲 Fase 4B:
 
 ## 8. Progress Tracking
 
-### Overall Progress: `61%`
+### Overall Progress: `68%`
 
 | Fase | Status | Progress |
 |---|---|---|
 | Fase 1: API Layer + PWA | ✅ Completed | `28/28` tasks |
 | Fase 2: Push Notification | ✅ Completed | `15/16` tasks *(code selesai, butuh Firebase project untuk testing device)* |
-| Fase 3: React Native App | 🔶 In Progress | `20/45` tasks |
+| Fase 3: React Native App | 🔶 In Progress | `28/45` tasks |
 | Fase 4: Build & Deploy | 🔲 Not Started | `0/15` tasks |
-| **Total** | | **`63/104` tasks** |
+| **Total** | | **`71/104` tasks** |
 
 ### Legend
 - 🔲 Not Started

@@ -5,7 +5,7 @@ import { COLORS } from '../theme/theme';
 import DashboardScreen from '../screens/DashboardScreen';
 import SuratMasukNavigator from './SuratMasukNavigator';
 import SuratKeluarNavigator from './SuratKeluarNavigator';
-import DisposisiScreen from '../screens/DisposisiScreen';
+import DisposisiNavigator from './DisposisiNavigator';
 import ProfilScreen from '../screens/ProfilScreen';
 
 export type MainTabParamList = {
@@ -67,7 +67,7 @@ export default function MainTabNavigator() {
       />
       <Tab.Screen
         name="DisposisiTab"
-        component={DisposisiScreen}
+        component={DisposisiNavigator}
         options={{
           tabBarLabel: 'Disposisi',
           tabBarIcon: ({ focused }: { focused: boolean }) => <TabIcon focused={focused} icon="📋" />,

@@ -48,7 +48,7 @@ interface SuratMasukDetail {
 
 export default function SuratMasukDetailScreen() {
   const route = useRoute<any>();
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const suratId = route.params?.id;
 
   const [surat, setSurat] = useState<SuratMasukDetail | null>(null);
@@ -266,6 +266,18 @@ export default function SuratMasukDetailScreen() {
             )}
           </TouchableOpacity>
         ) : null}
+
+        {/* Buat Disposisi Action Button */}
+        <TouchableOpacity
+          style={[styles.actionButton, { backgroundColor: COLORS.accent, marginTop: 0 }]}
+          onPress={() => navigation.navigate('DisposisiTab', {
+            screen: 'DisposisiCreate',
+            params: { surat_masuk_id: surat.id }
+          })}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.actionButtonText}>Buat Disposisi 📋</Text>
+        </TouchableOpacity>
 
         {/* Timeline Disposisi Section */}
         <View style={styles.timelineSection}>
