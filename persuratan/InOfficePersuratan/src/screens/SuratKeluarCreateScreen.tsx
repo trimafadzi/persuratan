@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -13,10 +13,15 @@ import {
   StatusBar,
   Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import DocumentPicker from 'react-native-document-picker';
+import { launchCamera } from 'react-native-image-picker';
 import { apiClient } from '../api/client';
-import { COLORS, SPACING, SIZES, SHADOWS } from '../theme/theme';
+import { SPACING, SIZES, SHADOWS, ThemeColors } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
+
+const DRAFT_KEY = '@draft_surat_keluar';
 
 interface SelectedFile {
   uri: string;
@@ -32,6 +37,9 @@ const SIFAT_OPTIONS = [
 ];
 
 export default function SuratKeluarCreateScreen() {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
+
   const navigation = useNavigation();
 
   // Form states
@@ -46,6 +54,74 @@ export default function SuratKeluarCreateScreen() {
   // Loading & error
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Draft states
+  const [hasDraft, setHasDraft] = useState(false);
+
+  // Check for existing draft on mount
+  useEffect(() => {
+    const checkDraft = async () => {
+      try {
+        const draftJson = await AsyncStorage.getItem(DRAFT_KEY);
+        if (draftJson) {
+          setHasDraft(true);
+        }
+      } catch (e) {
+        console.error('[Draft] Gagal memeriksa draf:', e);
+      }
+    };
+    checkDraft();
+  }, []);
+
+  // Restore draft
+  const handleRestoreDraft = async () => {
+    try {
+      const draftJson = await AsyncStorage.getItem(DRAFT_KEY);
+      if (draftJson) {
+        const draft = JSON.parse(draftJson);
+        if (draft.penerima) setPenerima(draft.penerima);
+        if (draft.perihal) setPerihal(draft.perihal);
+        if (draft.sifat) setSifat(draft.sifat);
+        if (draft.isi) setIsi(draft.isi);
+        setHasDraft(false);
+        Alert.alert('Dipulihkan', 'Draf berhasil dipulihkan.');
+      }
+    } catch (e) {
+      console.error('[Draft] Gagal memulihkan draf:', e);
+    }
+  };
+
+  // Dismiss draft
+  const handleDismissDraft = async () => {
+    try {
+      await AsyncStorage.removeItem(DRAFT_KEY);
+      setHasDraft(false);
+    } catch (e) {
+      console.error('[Draft] Gagal menghapus draf:', e);
+    }
+  };
+
+  // Save draft
+  const handleSaveDraft = async () => {
+    try {
+      const draftData = { penerima, perihal, sifat, isi };
+      await AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(draftData));
+      setHasDraft(false);
+      Alert.alert('Tersimpan', 'Draf surat keluar berhasil disimpan.');
+    } catch (e) {
+      console.error('[Draft] Gagal menyimpan draf:', e);
+      Alert.alert('Error', 'Gagal menyimpan draf.');
+    }
+  };
+
+  // Clear draft
+  const clearDraft = async () => {
+    try {
+      await AsyncStorage.removeItem(DRAFT_KEY);
+    } catch (e) {
+      console.error('[Draft] Gagal menghapus draf:', e);
+    }
+  };
 
   // Pick Document (.pdf, .doc, .docx)
   const handlePickDocument = async () => {
@@ -72,6 +148,31 @@ export default function SuratKeluarCreateScreen() {
         console.error('[Picker] Error:', err);
       }
     }
+  };
+
+  // Take Photo with Camera
+  const handleTakePhoto = () => {
+    launchCamera(
+      {
+        mediaType: 'photo',
+        quality: 0.8,
+      },
+      (response) => {
+        if (response.didCancel) {
+          console.log('[Camera] User cancelled');
+        } else if (response.errorCode) {
+          console.error('[Camera] Error:', response.errorMessage);
+        } else if (response.assets && response.assets.length > 0) {
+          const asset = response.assets[0];
+          setFile({
+            uri: asset.uri || '',
+            name: asset.fileName || 'photo.jpg',
+            type: asset.type || 'image/jpeg',
+          });
+          setErrorMsg('');
+        }
+      }
+    );
   };
 
   const handleSave = async () => {
@@ -106,6 +207,9 @@ export default function SuratKeluarCreateScreen() {
 
       const generatedNum = response.data.data?.nomor_surat_otomatis || '';
 
+      // Clear draft on success
+      await clearDraft();
+
       Alert.alert(
         'Sukses', 
         `Surat keluar berhasil dibuat.\nNomor Otomatis: ${generatedNum}`, 
@@ -124,7 +228,7 @@ export default function SuratKeluarCreateScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
       
       {/* Header */}
       <View style={styles.header}>
@@ -140,6 +244,27 @@ export default function SuratKeluarCreateScreen() {
         style={styles.keyboardView}
       >
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          {/* Draft Restore Banner */}
+          {hasDraft && (
+            <View style={styles.draftBanner}>
+              <Text style={styles.draftBannerIcon}>💾</Text>
+              <View style={styles.draftBannerContent}>
+                <Text style={styles.draftBannerTitle}>Draf Tersedia</Text>
+                <Text style={styles.draftBannerText}>
+                  Ada draf surat keluar yang belum dikirim. Pulihkan atau hapus?
+                </Text>
+              </View>
+              <View style={styles.draftBannerActions}>
+                <TouchableOpacity style={styles.draftRestoreBtn} onPress={handleRestoreDraft}>
+                  <Text style={styles.draftRestoreText}>Pulihkan</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.draftDismissBtn} onPress={handleDismissDraft}>
+                  <Text style={styles.draftDismissText}>Hapus</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
           {errorMsg ? (
             <View style={styles.errorContainer}>
               <Text style={styles.errorText}>{errorMsg}</Text>
@@ -161,7 +286,7 @@ export default function SuratKeluarCreateScreen() {
               <TextInput
                 style={styles.inputField}
                 placeholder="Contoh: Direktur PT Integra / Unit Humas"
-                placeholderTextColor={COLORS.textMuted}
+                placeholderTextColor={colors.textMuted}
                 value={penerima}
                 onChangeText={setPenerima}
               />
@@ -173,7 +298,7 @@ export default function SuratKeluarCreateScreen() {
               <TextInput
                 style={styles.inputField}
                 placeholder="Contoh: Permohonan Kerja Sama Riset Medis"
-                placeholderTextColor={COLORS.textMuted}
+                placeholderTextColor={colors.textMuted}
                 value={perihal}
                 onChangeText={setPerihal}
               />
@@ -191,8 +316,8 @@ export default function SuratKeluarCreateScreen() {
                       style={[
                         styles.sifatOptButton,
                         isSelected && styles.sifatOptButtonActive,
-                        isSelected && opt.value === 'segera' && { backgroundColor: '#fee2e2', borderColor: COLORS.danger },
-                        isSelected && opt.value === 'penting' && { backgroundColor: '#fef3c7', borderColor: COLORS.warningDark },
+                        isSelected && opt.value === 'segera' && { backgroundColor: '#fee2e2', borderColor: colors.danger },
+                        isSelected && opt.value === 'penting' && { backgroundColor: '#fef3c7', borderColor: colors.warningDark },
                         isSelected && opt.value === 'rahasia' && { backgroundColor: '#f3e8ff', borderColor: '#7c3aed' },
                       ]}
                       onPress={() => setSifat(opt.value)}
@@ -201,8 +326,8 @@ export default function SuratKeluarCreateScreen() {
                         style={[
                           styles.sifatOptText,
                           isSelected && styles.sifatOptTextActive,
-                          isSelected && opt.value === 'segera' && { color: COLORS.danger },
-                          isSelected && opt.value === 'penting' && { color: COLORS.warningDark },
+                          isSelected && opt.value === 'segera' && { color: colors.danger },
+                          isSelected && opt.value === 'penting' && { color: colors.warningDark },
                           isSelected && opt.value === 'rahasia' && { color: '#7c3aed' },
                         ]}
                       >
@@ -220,7 +345,7 @@ export default function SuratKeluarCreateScreen() {
               <TextInput
                 style={[styles.inputField, styles.textArea]}
                 placeholder="Masukkan isi ringkas atau keterangan surat..."
-                placeholderTextColor={COLORS.textMuted}
+                placeholderTextColor={colors.textMuted}
                 multiline
                 numberOfLines={4}
                 value={isi}
@@ -231,9 +356,14 @@ export default function SuratKeluarCreateScreen() {
             {/* File Upload */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Berkas Lampiran (.pdf, .doc, .docx, image)</Text>
-              <TouchableOpacity style={styles.fileButton} onPress={handlePickDocument}>
-                <Text style={styles.fileButtonText}>📁 Pilih Berkas Dokumen</Text>
-              </TouchableOpacity>
+              <View style={styles.attachmentButtonRow}>
+                <TouchableOpacity style={styles.fileButton} onPress={handlePickDocument}>
+                  <Text style={styles.fileButtonText}>📁 Dokumen</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.fileButton} onPress={handleTakePhoto}>
+                  <Text style={styles.fileButtonText}>📷 Kamera</Text>
+                </TouchableOpacity>
+              </View>
 
               {file ? (
                 <View style={styles.selectedFileBox}>
@@ -257,10 +387,19 @@ export default function SuratKeluarCreateScreen() {
             activeOpacity={0.8}
           >
             {isSubmitting ? (
-              <ActivityIndicator size="small" color={COLORS.white} />
+              <ActivityIndicator size="small" color={colors.white} />
             ) : (
               <Text style={styles.saveButtonText}>Simpan & Buat Nomor</Text>
             )}
+          </TouchableOpacity>
+
+          {/* Save Draft Button */}
+          <TouchableOpacity
+            style={styles.draftButton}
+            onPress={handleSaveDraft}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.draftButtonText}>💾 Simpan Draf</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -268,20 +407,20 @@ export default function SuratKeluarCreateScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: ThemeColors) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   keyboardView: {
     flex: 1,
   },
   header: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     paddingVertical: SPACING.md,
     paddingHorizontal: SPACING.xl,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -293,13 +432,13 @@ const styles = StyleSheet.create({
   },
   backArrow: {
     fontSize: 24,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '700',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.primary,
+    color: colors.primary,
     flex: 1,
     textAlign: 'center',
   },
@@ -321,7 +460,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   formCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderRadius: SIZES.radiusLg,
     padding: SPACING.xl,
     ...SHADOWS.sm,
@@ -346,18 +485,18 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: SPACING.xs,
   },
   inputField: {
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     borderRadius: SIZES.radiusSm,
     paddingHorizontal: SPACING.md,
     paddingVertical: Platform.OS === 'ios' ? SPACING.md : 8,
     fontSize: 13,
-    color: COLORS.text,
+    color: colors.text,
   },
   textArea: {
     textAlignVertical: 'top',
@@ -370,31 +509,35 @@ const styles = StyleSheet.create({
   },
   sifatOptButton: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     borderRadius: SIZES.radiusSm,
     paddingVertical: SPACING.sm,
     alignItems: 'center',
   },
   sifatOptButtonActive: {
     backgroundColor: 'rgba(37, 87, 167, 0.1)',
-    borderColor: COLORS.primary,
+    borderColor: colors.primary,
   },
   sifatOptText: {
     fontSize: 11,
     fontWeight: '600',
-    color: COLORS.textMuted,
+    color: colors.textMuted,
   },
   sifatOptTextActive: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '700',
   },
+  attachmentButtonRow: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+  },
   fileButton: {
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
     borderWidth: 1,
     borderStyle: 'dashed',
-    borderColor: COLORS.textMuted,
+    borderColor: colors.textMuted,
     borderRadius: SIZES.radiusSm,
     paddingVertical: SPACING.md,
     alignItems: 'center',
@@ -402,13 +545,13 @@ const styles = StyleSheet.create({
   fileButtonText: {
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.text,
+    color: colors.text,
   },
   selectedFileBox: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(37, 87, 167, 0.05)',
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     borderWidth: 1,
     borderRadius: SIZES.radiusSm,
     paddingHorizontal: SPACING.md,
@@ -423,18 +566,18 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.text,
+    color: colors.text,
   },
   removeFile: {
     padding: SPACING.xs,
   },
   removeFileText: {
     fontSize: 20,
-    color: COLORS.danger,
+    color: colors.danger,
     fontWeight: '700',
   },
   saveButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     borderRadius: SIZES.radiusSm,
     paddingVertical: SPACING.md,
     alignItems: 'center',
@@ -442,8 +585,81 @@ const styles = StyleSheet.create({
     ...SHADOWS.sm,
   },
   saveButtonText: {
-    color: COLORS.white,
+    color: colors.white,
     fontSize: 16,
     fontWeight: '700',
+  },
+  draftButton: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: SIZES.radiusSm,
+    paddingVertical: SPACING.md,
+    alignItems: 'center',
+    marginTop: SPACING.sm,
+  },
+  draftButtonText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  draftBanner: {
+    backgroundColor: '#fffbeb',
+    borderWidth: 1,
+    borderColor: '#fcd34d',
+    borderRadius: SIZES.radiusSm,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
+  draftBannerIcon: {
+    fontSize: 22,
+    marginRight: SPACING.sm,
+  },
+  draftBannerContent: {
+    flex: 1,
+    minWidth: 150,
+  },
+  draftBannerTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#92400e',
+    marginBottom: 2,
+  },
+  draftBannerText: {
+    fontSize: 11,
+    color: '#a16207',
+    lineHeight: 15,
+  },
+  draftBannerActions: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+    marginTop: SPACING.sm,
+  },
+  draftRestoreBtn: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: 6,
+    borderRadius: SIZES.radiusSm,
+  },
+  draftRestoreText: {
+    color: colors.white,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  draftDismissBtn: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: 6,
+    borderRadius: SIZES.radiusSm,
+  },
+  draftDismissText: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '600',
   },
 });

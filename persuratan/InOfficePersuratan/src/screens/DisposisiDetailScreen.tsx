@@ -14,7 +14,8 @@ import {
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { apiClient } from '../api/client';
 import { useAuthStore } from '../store/authStore';
-import { COLORS, SPACING, SIZES, SHADOWS } from '../theme/theme';
+import { SPACING, SIZES, SHADOWS, ThemeColors } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
 
 interface UserDetail {
   id: number;
@@ -63,6 +64,9 @@ interface DisposisiDetail {
 }
 
 export default function DisposisiDetailScreen() {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
+
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
   const currentUser = useAuthStore((state) => state.user);
@@ -150,18 +154,18 @@ export default function DisposisiDetailScreen() {
 
   const getStatusTextColor = (status: string) => {
     switch (status) {
-      case 'pending': return COLORS.warningDark;
-      case 'diteruskan': return COLORS.primaryLight;
-      case 'selesai': return COLORS.successLight;
-      case 'dibatalkan': return COLORS.danger;
-      default: return COLORS.textMuted;
+      case 'pending': return colors.warningDark;
+      case 'diteruskan': return colors.primaryLight;
+      case 'selesai': return colors.successLight;
+      case 'dibatalkan': return colors.danger;
+      default: return colors.textMuted;
     }
   };
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -192,7 +196,7 @@ export default function DisposisiDetailScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
 
       {/* Header */}
       <View style={styles.header}>
@@ -214,7 +218,7 @@ export default function DisposisiDetailScreen() {
             </View>
             {disposisi.is_overdue && (
               <View style={[styles.badge, { backgroundColor: '#fee2e2' }]}>
-                <Text style={[styles.badgeText, { color: COLORS.danger }]}>TERLEWAT DEADLINE</Text>
+                <Text style={[styles.badgeText, { color: colors.danger }]}>TERLEWAT DEADLINE</Text>
               </View>
             )}
           </View>
@@ -340,7 +344,7 @@ export default function DisposisiDetailScreen() {
                   style={[styles.btn, styles.btnSecondary, { marginTop: SPACING.sm }]}
                   onPress={() => navigation.navigate('DisposisiForward', { id: disposisi.id })}
                 >
-                  <Text style={[styles.btnText, { color: COLORS.primary }]}>Teruskan Disposisi ➡️</Text>
+                  <Text style={[styles.btnText, { color: colors.primary }]}>Teruskan Disposisi ➡️</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -362,7 +366,7 @@ export default function DisposisiDetailScreen() {
                   disabled={cancelling}
                 >
                   {cancelling ? (
-                    <ActivityIndicator size="small" color={COLORS.white} />
+                    <ActivityIndicator size="small" color={colors.white} />
                   ) : (
                     <Text style={styles.btnText}>Batalkan Disposisi ❌</Text>
                   )}
@@ -376,14 +380,14 @@ export default function DisposisiDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -394,28 +398,28 @@ const styles = StyleSheet.create({
     padding: SPACING.xl,
   },
   errorText: {
-    color: COLORS.danger,
+    color: colors.danger,
     fontSize: 16,
     fontWeight: '600',
     marginBottom: SPACING.md,
     textAlign: 'center',
   },
   backButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     paddingHorizontal: SPACING.xl,
     paddingVertical: SPACING.md,
     borderRadius: SIZES.radiusSm,
   },
   backButtonText: {
-    color: COLORS.white,
+    color: colors.white,
     fontWeight: '700',
   },
   header: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     paddingVertical: SPACING.md,
     paddingHorizontal: SPACING.xl,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -427,13 +431,13 @@ const styles = StyleSheet.create({
   },
   backArrow: {
     fontSize: 24,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '700',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.primary,
+    color: colors.primary,
     flex: 1,
     textAlign: 'center',
   },
@@ -441,7 +445,7 @@ const styles = StyleSheet.create({
     padding: SPACING.xl,
   },
   detailsCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderRadius: SIZES.radiusLg,
     padding: SPACING.xl,
     ...SHADOWS.sm,
@@ -465,14 +469,14 @@ const styles = StyleSheet.create({
   instructionText: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.text,
+    color: colors.text,
     lineHeight: 22,
     marginBottom: SPACING.xs,
     fontStyle: 'italic',
   },
   dateText: {
     fontSize: 11,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     marginBottom: SPACING.md,
   },
   infoRow: {
@@ -480,50 +484,50 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: SPACING.xs,
     borderTopWidth: 1,
-    borderTopColor: COLORS.border,
+    borderTopColor: colors.border,
     marginTop: SPACING.xs,
   },
   infoLabel: {
     fontSize: 13,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     fontWeight: '500',
   },
   infoValue: {
     fontSize: 13,
-    color: COLORS.text,
+    color: colors.text,
     fontWeight: '600',
   },
   deadlineOverdue: {
-    color: COLORS.danger,
+    color: colors.danger,
     fontWeight: '700',
   },
   divider: {
     height: 1,
-    backgroundColor: COLORS.border,
+    backgroundColor: colors.border,
     marginVertical: SPACING.md,
   },
   sectionTitle: {
     fontSize: 13,
     fontWeight: '800',
-    color: COLORS.primary,
+    color: colors.primary,
     marginBottom: SPACING.md,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   suratCard: {
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
     borderRadius: SIZES.radiusSm,
     padding: SPACING.md,
   },
   suratPerihal: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: 2,
   },
   suratMeta: {
     fontSize: 12,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     marginBottom: SPACING.sm,
   },
   viewSuratBtn: {
@@ -533,13 +537,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   viewSuratBtnText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 12,
     fontWeight: '700',
   },
   emptyText: {
     fontSize: 13,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     fontStyle: 'italic',
   },
   peopleRow: {
@@ -549,7 +553,7 @@ const styles = StyleSheet.create({
   peopleLabel: {
     width: 80,
     fontSize: 13,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     fontWeight: '500',
   },
   peopleValueContainer: {
@@ -558,11 +562,11 @@ const styles = StyleSheet.create({
   peopleName: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.text,
+    color: colors.text,
   },
   peopleSub: {
     fontSize: 11,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     marginTop: 2,
   },
   penerimaItem: {
@@ -570,7 +574,7 @@ const styles = StyleSheet.create({
   },
   laporanBox: {
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     borderRadius: SIZES.radiusSm,
     padding: SPACING.md,
     marginBottom: SPACING.md,
@@ -583,26 +587,26 @@ const styles = StyleSheet.create({
   laporanUser: {
     fontSize: 13,
     fontWeight: '700',
-    color: COLORS.primary,
+    color: colors.primary,
   },
   laporanTime: {
     fontSize: 10,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
   },
   laporanContent: {
     fontSize: 13,
-    color: COLORS.text,
+    color: colors.text,
     lineHeight: 18,
   },
   attachmentBox: {
     marginTop: SPACING.sm,
     borderTopWidth: 1,
-    borderTopColor: COLORS.border,
+    borderTopColor: colors.border,
     paddingTop: SPACING.xs,
   },
   attachmentLabel: {
     fontSize: 11,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     fontWeight: '600',
     marginBottom: 4,
   },
@@ -617,7 +621,7 @@ const styles = StyleSheet.create({
   },
   attachmentName: {
     fontSize: 12,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '500',
   },
   tanggapanBox: {
@@ -628,21 +632,21 @@ const styles = StyleSheet.create({
   },
   tanggapanApproved: {
     backgroundColor: '#f0fdf4',
-    borderLeftColor: COLORS.successLight,
+    borderLeftColor: colors.successLight,
   },
   tanggapanRejected: {
     backgroundColor: '#fdf2f2',
-    borderLeftColor: COLORS.danger,
+    borderLeftColor: colors.danger,
   },
   tanggapanTitle: {
     fontSize: 12,
     fontWeight: '700',
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: 2,
   },
   tanggapanText: {
     fontSize: 12,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
   },
   actionsContainer: {
     marginBottom: SPACING.xxl,
@@ -655,21 +659,21 @@ const styles = StyleSheet.create({
     ...SHADOWS.sm,
   },
   btnPrimary: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
   },
   btnSecondary: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: COLORS.primary,
+    borderColor: colors.primary,
   },
   btnSuccess: {
-    backgroundColor: COLORS.successLight,
+    backgroundColor: colors.successLight,
   },
   btnDanger: {
-    backgroundColor: COLORS.danger,
+    backgroundColor: colors.danger,
   },
   btnText: {
-    color: COLORS.white,
+    color: colors.white,
     fontSize: 14,
     fontWeight: '700',
   },

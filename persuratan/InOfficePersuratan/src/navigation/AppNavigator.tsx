@@ -3,16 +3,14 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuthStore } from '../store/authStore';
-import { COLORS } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
 import LoginScreen from '../screens/LoginScreen';
 import MainTabNavigator from './MainTabNavigator';
-import NotifikasiScreen from '../screens/NotifikasiScreen';
 import LaporanScreen from '../screens/LaporanScreen';
 
 export type RootStackParamList = {
   Login: undefined;
   Dashboard: undefined;
-  Notifikasi: undefined;
   Laporan: undefined;
 };
 
@@ -20,6 +18,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
   const { isAuthenticated, isLoading, initialize } = useAuthStore();
+  const { colors } = useTheme();
 
   useEffect(() => {
     initialize();
@@ -27,8 +26,8 @@ export default function AppNavigator() {
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -39,13 +38,17 @@ export default function AppNavigator() {
         screenOptions={{
           headerShown: false,
           animation: 'slide_from_right',
+          gestureEnabled: true,
         }}
       >
         {isAuthenticated ? (
           <>
             <Stack.Screen name="Dashboard" component={MainTabNavigator} />
-            <Stack.Screen name="Notifikasi" component={NotifikasiScreen} />
-            <Stack.Screen name="Laporan" component={LaporanScreen} />
+            <Stack.Screen
+              name="Laporan"
+              component={LaporanScreen}
+              options={{ animation: 'fade_from_bottom' }}
+            />
           </>
         ) : (
           <Stack.Screen name="Login" component={LoginScreen} />
@@ -58,7 +61,6 @@ export default function AppNavigator() {
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
-    backgroundColor: COLORS.background,
     justifyContent: 'center',
     alignItems: 'center',
   },

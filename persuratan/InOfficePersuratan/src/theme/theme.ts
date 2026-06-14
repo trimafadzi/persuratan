@@ -50,6 +50,29 @@ export const FONTS = {
   bold: 'System',
 };
 
+export const DARK_COLORS = {
+  primary: '#5b8cc9',
+  primaryLight: '#7ba7d9',
+  primaryDark: '#3a6ea5',
+  accent: '#ff6b6b',
+  accentLight: '#ff8a8a',
+  success: '#52b788',
+  successLight: '#74c69d',
+  warning: '#f4d35e',
+  warningDark: '#e9c46a',
+  info: '#6db3d4',
+  danger: '#ff6b6b',
+  background: '#0f1419',
+  backgroundDark: '#0a0e13',
+  cardBg: '#1a202c',
+  text: '#e2e8f0',
+  textMuted: '#a0aec0',
+  border: '#2d3748',
+  white: '#1a202c',
+  transparent: 'transparent',
+  overlay: 'rgba(0, 0, 0, 0.6)',
+};
+
 export const SHADOWS = {
   sm: {
     shadowColor: '#000',
@@ -73,3 +96,9 @@ export const SHADOWS = {
     elevation: 8,
   },
 };
+
+export type ThemeColors = typeof COLORS;
+
+export function getTheme(isDark: boolean): { colors: ThemeColors } {
+  return { colors: isDark ? DARK_COLORS : COLORS };
+}

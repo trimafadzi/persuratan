@@ -13,9 +13,13 @@ import {
   StatusBar,
 } from 'react-native';
 import { useAuthStore } from '../store/authStore';
-import { COLORS, SPACING, SIZES, SHADOWS } from '../theme/theme';
+import { SPACING, SIZES, SHADOWS, ThemeColors } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function LoginScreen() {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
+
   const [loginVal, setLoginVal] = useState('');
   const [passwordVal, setPasswordVal] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -47,7 +51,7 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.primaryDark} />
+      <StatusBar barStyle="light-content" backgroundColor={colors.primaryDark} />
       
       {/* Background Graphic Header */}
       <View style={styles.headerBackground}>
@@ -96,7 +100,7 @@ export default function LoginScreen() {
               <TextInput
                 style={styles.inputField}
                 placeholder="Masukkan username atau email"
-                placeholderTextColor={COLORS.textMuted}
+                placeholderTextColor={colors.textMuted}
                 autoCapitalize="none"
                 autoCorrect={false}
                 value={loginVal}
@@ -114,7 +118,7 @@ export default function LoginScreen() {
                 <TextInput
                   style={[styles.inputField, styles.passwordField]}
                   placeholder="Masukkan password"
-                  placeholderTextColor={COLORS.textMuted}
+                  placeholderTextColor={colors.textMuted}
                   secureTextEntry={!isPasswordVisible}
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -144,7 +148,7 @@ export default function LoginScreen() {
               activeOpacity={0.8}
             >
               {isSubmitting ? (
-                <ActivityIndicator size="small" color={COLORS.white} />
+                <ActivityIndicator size="small" color={colors.white} />
               ) : (
                 <Text style={styles.loginButtonText}>Masuk</Text>
               )}
@@ -161,10 +165,10 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: ThemeColors) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.primaryDark,
+    backgroundColor: colors.primaryDark,
   },
   headerBackground: {
     position: 'absolute',
@@ -172,7 +176,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: COLORS.primaryDark,
+    backgroundColor: colors.primaryDark,
     overflow: 'hidden',
   },
   circleGraphic1: {
@@ -211,7 +215,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: SIZES.radiusLg,
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     justifyContent: 'center',
     alignItems: 'center',
     ...SHADOWS.md,
@@ -221,7 +225,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 22,
     borderWidth: 2,
-    borderColor: COLORS.primary,
+    borderColor: colors.primary,
     borderRadius: 3,
     position: 'relative',
     overflow: 'hidden',
@@ -233,7 +237,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderWidth: 2,
-    borderColor: COLORS.primary,
+    borderColor: colors.primary,
     transform: [{ rotate: '45deg' }],
   },
   envelopeBody: {
@@ -242,12 +246,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 2,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
   },
   appName: {
     fontSize: 28,
     fontWeight: '800',
-    color: COLORS.white,
+    color: colors.white,
     letterSpacing: 0.5,
   },
   appTagline: {
@@ -258,14 +262,14 @@ const styles = StyleSheet.create({
   },
   hospitalName: {
     fontSize: 11,
-    color: COLORS.accentLight,
+    color: colors.accentLight,
     fontWeight: '700',
     letterSpacing: 0.5,
     marginTop: 4,
     textTransform: 'uppercase',
   },
   formCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderRadius: SIZES.radiusLg,
     padding: SPACING.xl,
     ...SHADOWS.lg,
@@ -273,12 +277,12 @@ const styles = StyleSheet.create({
   welcomeText: {
     fontSize: 22,
     fontWeight: '800',
-    color: COLORS.text,
+    color: colors.text,
     textAlign: 'center',
   },
   subtitleText: {
     fontSize: 13,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     textAlign: 'center',
     marginTop: 4,
     marginBottom: SPACING.lg,
@@ -309,18 +313,18 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: SPACING.xs,
   },
   inputField: {
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     borderRadius: SIZES.radiusSm,
     paddingHorizontal: SPACING.md,
     paddingVertical: Platform.OS === 'ios' ? SPACING.md : SPACING.sm,
     fontSize: 14,
-    color: COLORS.text,
+    color: colors.text,
   },
   passwordWrapper: {
     flexDirection: 'row',
@@ -337,12 +341,12 @@ const styles = StyleSheet.create({
     padding: SPACING.xs,
   },
   eyeButtonText: {
-    color: COLORS.primaryLight,
+    color: colors.primaryLight,
     fontSize: 12,
     fontWeight: '700',
   },
   loginButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     borderRadius: SIZES.radiusSm,
     paddingVertical: SPACING.md,
     alignItems: 'center',
@@ -351,7 +355,7 @@ const styles = StyleSheet.create({
     ...SHADOWS.sm,
   },
   loginButtonText: {
-    color: COLORS.white,
+    color: colors.white,
     fontSize: 16,
     fontWeight: '700',
   },

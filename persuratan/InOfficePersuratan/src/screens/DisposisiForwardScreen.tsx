@@ -15,7 +15,8 @@ import {
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { apiClient } from '../api/client';
-import { COLORS, SPACING, SIZES, SHADOWS } from '../theme/theme';
+import { SPACING, SIZES, SHADOWS, ThemeColors } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
 
 interface UserItem {
   id: number;
@@ -25,6 +26,9 @@ interface UserItem {
 }
 
 export default function DisposisiForwardScreen() {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
+
   const route = useRoute<any>();
   const navigation = useNavigation();
   const parentId = route.params?.id;
@@ -209,14 +213,14 @@ export default function DisposisiForwardScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
 
       {/* Header */}
       <View style={styles.header}>
@@ -266,7 +270,7 @@ export default function DisposisiForwardScreen() {
             multiline
             numberOfLines={4}
             placeholder="Masukkan instruksi pendelegasian baru..."
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor={colors.textMuted}
             value={isiDisposisi}
             onChangeText={setIsiDisposisi}
             textAlignVertical="top"
@@ -294,7 +298,7 @@ export default function DisposisiForwardScreen() {
           disabled={submitting}
         >
           {submitting ? (
-            <ActivityIndicator size="small" color={COLORS.white} />
+            <ActivityIndicator size="small" color={colors.white} />
           ) : (
             <Text style={styles.submitButtonText}>Teruskan Disposisi ➡️</Text>
           )}
@@ -315,7 +319,7 @@ export default function DisposisiForwardScreen() {
             <TextInput
               style={styles.modalSearchInput}
               placeholder="Cari nama staf..."
-              placeholderTextColor={COLORS.textMuted}
+              placeholderTextColor={colors.textMuted}
               value={userSearch}
               onChangeText={setUserSearch}
             />
@@ -366,23 +370,23 @@ export default function DisposisiForwardScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   header: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     paddingVertical: SPACING.md,
     paddingHorizontal: SPACING.xl,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -394,13 +398,13 @@ const styles = StyleSheet.create({
   },
   backArrow: {
     fontSize: 24,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '700',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.primary,
+    color: colors.primary,
     flex: 1,
     textAlign: 'center',
   },
@@ -413,16 +417,16 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '700',
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: SPACING.xs,
   },
   pickerTrigger: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     borderRadius: SIZES.radiusSm,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.md,
@@ -430,20 +434,20 @@ const styles = StyleSheet.create({
   },
   pickerTriggerText: {
     fontSize: 14,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     flex: 1,
     paddingRight: SPACING.sm,
   },
   pickerTriggerTextActive: {
-    color: COLORS.text,
+    color: colors.text,
     fontWeight: '600',
   },
   pickerArrow: {
     fontSize: 12,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
   },
   readOnlyInput: {
-    backgroundColor: COLORS.border,
+    backgroundColor: colors.border,
     borderRadius: SIZES.radiusSm,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.md,
@@ -451,22 +455,22 @@ const styles = StyleSheet.create({
   readOnlyText: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.text,
+    color: colors.text,
   },
   textArea: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     borderRadius: SIZES.radiusSm,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.md,
     fontSize: 14,
-    color: COLORS.text,
+    color: colors.text,
     minHeight: 100,
     ...SHADOWS.sm,
   },
   submitButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     borderRadius: SIZES.radiusSm,
     paddingVertical: SPACING.md,
     alignItems: 'center',
@@ -476,7 +480,7 @@ const styles = StyleSheet.create({
     ...SHADOWS.sm,
   },
   submitButtonText: {
-    color: COLORS.white,
+    color: colors.white,
     fontSize: 15,
     fontWeight: '700',
   },
@@ -486,7 +490,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderTopLeftRadius: SIZES.radiusLg,
     borderTopRightRadius: SIZES.radiusLg,
     maxHeight: '80%',
@@ -499,33 +503,33 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
     paddingBottom: SPACING.sm,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
   },
   modalTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.primary,
+    color: colors.primary,
   },
   closeModalText: {
-    color: COLORS.primaryLight,
+    color: colors.primaryLight,
     fontWeight: '700',
     fontSize: 14,
   },
   modalSearchInput: {
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     borderRadius: SIZES.radiusSm,
     paddingHorizontal: SPACING.md,
     paddingVertical: 8,
     fontSize: 13,
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: SPACING.md,
   },
   listItem: {
     paddingVertical: SPACING.md,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -536,14 +540,14 @@ const styles = StyleSheet.create({
   listItemTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.text,
+    color: colors.text,
   },
   listItemCheckedText: {
-    color: COLORS.primary,
+    color: colors.primary,
   },
   listItemSubtitle: {
     fontSize: 12,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     marginTop: 2,
   },
   userListItemContent: {
@@ -555,7 +559,7 @@ const styles = StyleSheet.create({
   },
   emptyModalText: {
     textAlign: 'center',
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     paddingVertical: SPACING.xl,
     fontStyle: 'italic',
   },
@@ -571,11 +575,11 @@ const styles = StyleSheet.create({
   calendarTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.text,
+    color: colors.text,
   },
   calendarNavText: {
     fontSize: 16,
-    color: COLORS.primary,
+    color: colors.primary,
     paddingHorizontal: SPACING.md,
   },
   calendarWeekdays: {
@@ -588,7 +592,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.textMuted,
+    color: colors.textMuted,
   },
   calendarGrid: {
     flexDirection: 'row',
@@ -607,15 +611,15 @@ const styles = StyleSheet.create({
     height: 36,
   },
   calendarDaySelected: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
   },
   calendarDayText: {
     fontSize: 13,
-    color: COLORS.text,
+    color: colors.text,
     fontWeight: '500',
   },
   calendarDayTextSelected: {
-    color: COLORS.white,
+    color: colors.white,
     fontWeight: '700',
   },
 });

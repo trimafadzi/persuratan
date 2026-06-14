@@ -1,13 +1,12 @@
-# Walkthrough — Pengembangan Dashboard, Surat Masuk, Surat Keluar, & Modul Disposisi (Fase 3.3 - 3.6)
+# Walkthrough — Pengembangan Dashboard, Surat Masuk, Surat Keluar, & Modul Disposisi (Fase 3.3 - 3.11)
 
-Kami telah sukses mengimplementasikan fitur Navigasi Tab, Layar Dashboard Dinamis, Modul Surat Masuk, Modul Surat Keluar, serta seluruh Modul Disposisi (Daftar, Detail, Pembuatan, Penerusan, Laporan Pelaksanaan dengan multi-attachment, dan Tanggapan Evaluasi).
+Kami telah sukses mengimplementasikan fitur Navigasi Tab, Layar Dashboard Dinamis, Modul Surat Masuk, Modul Surat Keluar, seluruh Modul Disposisi (Daftar, Detail, Pembuatan, Penerusan, Laporan Pelaksanaan dengan multi-attachment, dan Tanggapan Evaluasi), Fitur Native Mobile (Kamera, Offline Draft, Skeleton Loading), serta UI/UX Polish (Dark Mode, Bottom Navigation Redesign, Empty/Error State).
 
 ## Fitur yang Diimplementasikan
 
 ### 1. Navigasi & Tab Utama
-- [MainTabNavigator.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/navigation/MainTabNavigator.tsx): Menghubungkan seluruh modul utama dalam bentuk menu tab di bagian bawah layar (**Dashboard**, **Surat Masuk**, **Surat Keluar**, **Disposisi**, **Profil**) dengan representasi ikon visual yang premium. Tab Disposisi kini memuat stack router `DisposisiNavigator`.
-- [SuratMasukNavigator.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/navigation/SuratMasukNavigator.tsx): Menangani alur stack navigasi dalam modul Surat Masuk (Daftar -> Detail -> Form Pembuatan).
-- [SuratKeluarNavigator.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/navigation/SuratKeluarNavigator.tsx): Menangani alur stack navigasi dalam modul Surat Keluar (Daftar -> Detail -> Form Pembuatan).
+- [MainTabNavigator.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/navigation/MainTabNavigator.tsx): Menghubungkan seluruh modul utama dalam bentuk menu tab di bagian bawah layar (**Dashboard**, **Surat**, **Disposisi**, **Notifikasi**, **Profil**) dengan ikon `MaterialCommunityIcons` vektor premium. Tab Surat kini memuat stack `SuratMasukNavigator` yang mencakup Surat Masuk dan Surat Keluar.
+- [SuratMasukNavigator.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/navigation/SuratMasukNavigator.tsx): Menangani alur stack navigasi dalam modul Surat (Masuk & Keluar).
 - [DisposisiNavigator.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/navigation/DisposisiNavigator.tsx): Menangani stack navigasi lengkap modul Disposisi (Daftar -> Detail -> Form Pembuatan -> Teruskan -> Kirim Laporan -> Evaluasi/Tanggapi).
 
 ### 2. Dashboard Dinamis (Fase 3.3)
@@ -83,6 +82,40 @@ Kami telah sukses mengimplementasikan fitur Navigasi Tab, Layar Dashboard Dinami
 - [ProfilScreen.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/screens/ProfilScreen.tsx):
   - Menampilkan metadata detail akun secara komprehensif.
   - Menambahkan security notice and instructions di kolom Keamanan untuk mengarahkan pengguna melakukan pengubahan sandi secara mandiri di Portal Web inOffice RSU UKI.
+  - Toggle Dark Mode untuk mengaktifkan/menonaktifkan tampilan gelap.
+
+### 9. Fitur Native Mobile (Fase 3.10)
+- [SkeletonLoader.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/components/SkeletonLoader.tsx):
+  - Komponen skeleton shimmer modern dengan animasi `Animated.loop` native React Native.
+  - Variasi layout: `CardListLoader` untuk list, `DashboardLoader` untuk dashboard, `ChartLoader` untuk laporan.
+  - Diterapkan pada 6 screen: Dashboard, SuratMasukList, SuratKeluarList, DisposisiList, Notifikasi, Laporan.
+- **Integrasi Kamera Native**:
+  - `launchCamera` pada `SuratMasukCreateScreen.tsx`, `SuratKeluarCreateScreen.tsx`, `DisposisiLaporanScreen.tsx`.
+  - Pengguna dapat memotret surat/dokumen langsung dari kamera untuk dilampirkan.
+- **Offline Draft System**:
+  - Sistem draf pada `SuratMasukCreateScreen.tsx`, `SuratKeluarCreateScreen.tsx`, `DisposisiCreateScreen.tsx`.
+  - Draf tersimpan di AsyncStorage dengan banner konfirmasi pemulihan.
+  - Auto-clear draf setelah submit berhasil ke server.
+
+### 10. UI/UX Mobile Polish (Fase 3.11)
+- **Bottom Navigation Redesign**:
+  - Redesign dari 5 tab (Dashboard, Surat Masuk, Surat Keluar, Disposisi, Profil) menjadi (Dashboard, Surat, Disposisi, Notifikasi, Profil).
+  - Surat Keluar dipindahkan ke dalam stack SuratMasukNavigator.
+  - Notifikasi dipindah dari root stack ke bottom tab.
+  - Ikon vektor `MaterialCommunityIcons` menggantikan emoji.
+- **Dark Mode Support**:
+  - [themeStore.ts](file:///root/persuratan/persuratan/InOfficePersuratan/src/store/themeStore.ts): Zustand store dengan `isDark` dan `toggleTheme()`, persisten ke AsyncStorage.
+  - [ThemeContext.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/theme/ThemeContext.tsx): React Context provider + hook `useTheme()` yang menyediakan `{ colors, isDark, toggleTheme }`.
+  - [theme.ts](file:///root/persuratan/persuratan/InOfficePersuratan/src/theme/theme.ts): Ditambahkan `DARK_COLORS` palette dan helper `getTheme()`.
+  - Seluruh 17 screen diupdate menggunakan `useTheme().colors`.
+  - Toggle Dark Mode di ProfilScreen.
+- **Reusable Components**:
+  - [EmptyState.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/components/EmptyState.tsx): Komponen empty state dengan ikon, judul, pesan, dan tombol aksi opsional.
+  - [ErrorState.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/components/ErrorState.tsx): Komponen error dengan pesan dan tombol retry.
+- **Enhanced Transitions**:
+  - `gestureEnabled: true` pada semua stack navigators untuk swipe-back.
+  - `animation: 'fade_from_bottom'` untuk Laporan (modal-like).
+  - `slide_from_right` untuk transisi screen lainnya.
 
 ---
 
@@ -104,5 +137,5 @@ npm run lint
 
 ### 3. Kemajuan Proyek (planmobile.md)
 Kami telah memperbarui progress tracking pada [planmobile.md](file:///root/persuratan/persuratan/planmobile.md):
-- Tugas Fase 3.7 & 3.8: **✅ Selesai**
-- Progres keseluruhan proyek meningkat dari **68%** ke **79%** (`82/104` total task selesai).
+- Tugas Fase 3.10 & 3.11: **✅ Selesai**
+- Progres keseluruhan proyek meningkat dari **79%** ke **88%** (`96/118` total task selesai).

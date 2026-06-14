@@ -13,9 +13,13 @@ import {
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { apiClient } from '../api/client';
-import { COLORS, SPACING, SIZES, SHADOWS } from '../theme/theme';
+import { SPACING, SIZES, SHADOWS, ThemeColors } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function DisposisiTanggapanScreen() {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
+
   const route = useRoute<any>();
   const navigation = useNavigation();
   const disposisiId = route.params?.id;
@@ -51,7 +55,7 @@ export default function DisposisiTanggapanScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
 
       {/* Header */}
       <View style={styles.header}>
@@ -115,7 +119,7 @@ export default function DisposisiTanggapanScreen() {
             multiline
             numberOfLines={5}
             placeholder="Masukkan catatan evaluasi atau alasan persetujuan/penolakan..."
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor={colors.textMuted}
             value={tanggapan}
             onChangeText={setTanggapan}
             textAlignVertical="top"
@@ -132,7 +136,7 @@ export default function DisposisiTanggapanScreen() {
           disabled={submitting}
         >
           {submitting ? (
-            <ActivityIndicator size="small" color={COLORS.white} />
+            <ActivityIndicator size="small" color={colors.white} />
           ) : (
             <Text style={styles.submitButtonText}>Kirim Tanggapan 🚀</Text>
           )}
@@ -142,17 +146,17 @@ export default function DisposisiTanggapanScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   header: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     paddingVertical: SPACING.md,
     paddingHorizontal: SPACING.xl,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -164,13 +168,13 @@ const styles = StyleSheet.create({
   },
   backArrow: {
     fontSize: 24,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '700',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.primary,
+    color: colors.primary,
     flex: 1,
     textAlign: 'center',
   },
@@ -183,7 +187,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '700',
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: SPACING.xs,
   },
   statusButtonsRow: {
@@ -199,43 +203,43 @@ const styles = StyleSheet.create({
     ...SHADOWS.sm,
   },
   btnApprove: {
-    borderColor: COLORS.successLight,
-    backgroundColor: COLORS.white,
+    borderColor: colors.successLight,
+    backgroundColor: colors.white,
   },
   btnApproveActive: {
-    backgroundColor: COLORS.successLight,
-    borderColor: COLORS.successLight,
+    backgroundColor: colors.successLight,
+    borderColor: colors.successLight,
   },
   btnReject: {
-    borderColor: COLORS.danger,
-    backgroundColor: COLORS.white,
+    borderColor: colors.danger,
+    backgroundColor: colors.white,
   },
   btnRejectActive: {
-    backgroundColor: COLORS.danger,
-    borderColor: COLORS.danger,
+    backgroundColor: colors.danger,
+    borderColor: colors.danger,
   },
   statusBtnText: {
     fontSize: 13,
     fontWeight: '700',
   },
   textApprove: {
-    color: COLORS.successLight,
+    color: colors.successLight,
   },
   textReject: {
-    color: COLORS.danger,
+    color: colors.danger,
   },
   textActive: {
-    color: COLORS.white,
+    color: colors.white,
   },
   textArea: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     borderRadius: SIZES.radiusSm,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.md,
     fontSize: 14,
-    color: COLORS.text,
+    color: colors.text,
     minHeight: 120,
     ...SHADOWS.sm,
   },
@@ -249,13 +253,13 @@ const styles = StyleSheet.create({
     ...SHADOWS.sm,
   },
   submitBtnApproved: {
-    backgroundColor: COLORS.successLight,
+    backgroundColor: colors.successLight,
   },
   submitBtnRejected: {
-    backgroundColor: COLORS.danger,
+    backgroundColor: colors.danger,
   },
   submitButtonText: {
-    color: COLORS.white,
+    color: colors.white,
     fontSize: 15,
     fontWeight: '700',
   },

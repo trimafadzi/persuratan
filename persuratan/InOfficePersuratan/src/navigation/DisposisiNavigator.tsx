@@ -24,6 +24,7 @@ export default function DisposisiNavigator() {
       screenOptions={{
         headerShown: false,
         animation: 'slide_from_right',
+        gestureEnabled: true,
       }}
     >
       <Stack.Screen name="DisposisiList" component={DisposisiListScreen} />

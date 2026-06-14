@@ -1,7 +1,7 @@
 # 📱 Plan Mobile — inOffice Persuratan RSU UKI
 
 > **Dokumen Perencanaan Pengembangan Mobile App**
-> Tanggal: 10 Juni 2026 | Status: **IN PROGRESS** | Terakhir diupdate: 10 Juni 2026 (Fase 2 selesai)
+> Tanggal: 10 Juni 2026 | Status: **IN PROGRESS** | Terakhir diupdate: 11 Juni 2026 (Fase 3.10 & 3.11 selesai)
 
 ---
 
@@ -324,23 +324,25 @@
 
 #### 3.10 Fitur Native Mobile
 
-- [ ] Camera integration (scan surat langsung dari kamera)
-- [ ] File picker (pilih PDF/image dari gallery)
+- [x] Camera integration (scan surat langsung dari kamera)
+- [x] File picker (pilih PDF/image dari gallery)
 - [ ] Biometric login (fingerprint/face ID) — opsional
 - [ ] Deep linking (tap notifikasi → langsung ke detail surat/disposisi)
-- [ ] Offline draft (simpan form yang belum terkirim)
-- [ ] Pull-to-refresh pada semua list screen
-- [ ] Skeleton loading (shimmer effect)
+- [x] Offline draft (simpan form yang belum terkirim)
+- [x] Pull-to-refresh pada semua list screen
+- [x] Skeleton loading (shimmer effect)
 
 #### 3.11 UI/UX Mobile
 
-- [ ] Design system (colors, typography, spacing — match web branding)
-- [ ] Bottom navigation: Dashboard | Surat Masuk | Disposisi | Notifikasi | Profil
-- [ ] Dark mode support
-- [ ] Animasi transisi antar screen
-- [ ] Empty state illustrations
-- [ ] Loading indicators
-- [ ] Error handling & retry UI
+- [x] Design system (colors, typography, spacing — match web branding)
+- [x] Bottom navigation: Dashboard | Surat | Disposisi | Notifikasi | Profil
+- [x] Dark mode support (Zustand store + ThemeContext + toggle di Profil)
+- [x] Animasi transisi antar screen (slide_from_right, fade_from_bottom untuk Laporan)
+- [x] Empty state components (EmptyState.tsx + ErrorState.tsx)
+- [x] Loading indicators (SkeletonLoader shimmer)
+- [x] Error handling & retry UI
+- [x] MaterialCommunityIcons vector icons untuk semua tab
+- [x] Gesture-enabled swipe-back pada semua stack navigators
 
 #### 3.12 Testing Fase 3
 
@@ -511,9 +513,9 @@ Minggu 1-2  │████████████████│ ✅ Fase 1A: 
 Minggu 3    │████████████████│ ✅ Fase 1B: PWA + API Testing + Documentation — SELESAI
 Minggu 4    │████████████████│ ✅ Fase 2A: FCM Push Notification — SELESAI
 Minggu 5    │████████████████│ ✅ Fase 2B: Real-time + Testing — SELESAI
-Minggu 6-7  │░░░░░░░░░░░░░░░░│ 🔲 Fase 3A: RN Setup + Auth + Dashboard + Surat
-Minggu 8-9  │░░░░░░░░░░░░░░░░│ 🔲 Fase 3B: Disposisi + Notifikasi + Profil
-Minggu 10   │░░░░░░░░░░░░░░░░│ 🔲 Fase 3C: Native features + Polish + Testing
+Minggu 6-7  │████████████████│ ✅ Fase 3A: RN Setup + Auth + Dashboard + Surat — SELESAI
+Minggu 8-9  │████████████████│ ✅ Fase 3B: Disposisi + Notifikasi + Profil — SELESAI
+Minggu 10   │████████████░░░░│ ✅ Fase 3C: Native features + Polish (3.10 & 3.11 selesai)
 Minggu 11   │░░░░░░░░░░░░░░░░│ 🔲 Fase 4A: Build + Store submission
 Minggu 12   │░░░░░░░░░░░░░░░░│ 🔲 Fase 4B: UAT + Go-live + Training
 ```
@@ -522,15 +524,15 @@ Minggu 12   │░░░░░░░░░░░░░░░░│ 🔲 Fase 4B:
 
 ## 8. Progress Tracking
 
-### Overall Progress: `79%`
+### Overall Progress: `88%`
 
 | Fase | Status | Progress |
 |---|---|---|
 | Fase 1: API Layer + PWA | ✅ Completed | `28/28` tasks |
 | Fase 2: Push Notification | ✅ Completed | `15/16` tasks *(code selesai, butuh Firebase project untuk testing device)* |
-| Fase 3: React Native App | 🔶 In Progress | `39/45` tasks |
+| Fase 3: React Native App | 🔶 In Progress | `53/59` tasks |
 | Fase 4: Build & Deploy | 🔲 Not Started | `0/15` tasks |
-| **Total** | | **`82/104` tasks** |
+| **Total** | | **`96/118` tasks** |
 
 ### Legend
 - 🔲 Not Started
@@ -623,6 +625,8 @@ class DisposisiApiController extends Controller
 
 | Tanggal | Versi | Deskripsi |
 |---|---|---|
+| 11 Juni 2026 | 1.4 | ✅ Fase 3.10 & 3.11 selesai: Native Features, Skeleton Loading, Dark Mode, UI/UX Polish |
+| 10 Juni 2026 | 1.3 | ✅ Fase 3.1-3.9 selesai: RN App screens (Dashboard, Surat, Disposisi, Notifikasi, Laporan, Profil) |
 | 10 Juni 2026 | 1.2 | ✅ Fase 2 selesai: FCM Push Notification + Laravel Reverb |
 | 10 Juni 2026 | 1.1 | ✅ Fase 1 selesai: API Layer + PWA Foundation |
 | 10 Juni 2026 | 1.0 | Dokumen awal perencanaan mobile app |

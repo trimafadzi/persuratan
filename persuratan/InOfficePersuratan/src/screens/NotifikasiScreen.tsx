@@ -11,7 +11,10 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { apiClient } from '../api/client';
-import { COLORS, SPACING, SIZES, SHADOWS } from '../theme/theme';
+import { SPACING, SIZES, SHADOWS, ThemeColors } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
+import { CardListLoader } from '../components/SkeletonLoader';
+import EmptyState from '../components/EmptyState';
 
 interface NotifikasiItem {
   id: number;
@@ -27,13 +30,14 @@ interface NotifikasiItem {
 
 export default function NotifikasiScreen() {
   const navigation = useNavigation<any>();
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
 
   const [notifList, setNotifList] = useState<NotifikasiItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Pagination
   const [page, setPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
 
@@ -88,11 +92,9 @@ export default function NotifikasiScreen() {
   };
 
   const handleNotifPress = async (item: NotifikasiItem) => {
-    // 1. Mark as read on server if not read yet
     if (!item.is_read) {
       try {
         await apiClient.patch(`/notifikasi/${item.id}/read`);
-        // Update local state to show read
         setNotifList((prev) =>
           prev.map((n) => (n.id === item.id ? { ...n, is_read: true } : n))
         );
@@ -101,7 +103,6 @@ export default function NotifikasiScreen() {
       }
     }
 
-    // 2. Perform redirection logic based on entity_type
     if (item.entity_type === 'Disposisi') {
       navigation.navigate('DisposisiTab', {
         screen: 'DisposisiDetail',
@@ -113,7 +114,7 @@ export default function NotifikasiScreen() {
         params: { id: item.entity_id },
       });
     } else if (item.entity_type === 'SuratKeluar') {
-      navigation.navigate('SuratKeluarTab', {
+      navigation.navigate('SuratMasukTab', {
         screen: 'SuratKeluarDetail',
         params: { id: item.entity_id },
       });
@@ -170,22 +171,16 @@ export default function NotifikasiScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.headerBackBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.backArrow}>←</Text>
-        </TouchableOpacity>
         <Text style={styles.headerTitle}>Notifikasi Saya</Text>
-        <View style={{ width: 40 }} />
       </View>
 
       {/* List */}
       {loading ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-        </View>
+        <CardListLoader itemCount={8} />
       ) : (
         <FlatList
           data={notifList}
@@ -200,16 +195,13 @@ export default function NotifikasiScreen() {
             loadingMore ? (
               <ActivityIndicator
                 size="small"
-                color={COLORS.primary}
+                color={colors.primary}
                 style={styles.footerLoader}
               />
             ) : null
           }
           ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyIcon}>🔔</Text>
-              <Text style={styles.emptyText}>Tidak ada notifikasi baru.</Text>
-            </View>
+            <EmptyState icon="🔔" title="Tidak ada notifikasi baru." />
           }
         />
       )}
@@ -217,65 +209,46 @@ export default function NotifikasiScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: colors.background,
   },
   header: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     paddingVertical: SPACING.md,
     paddingHorizontal: SPACING.xl,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    borderBottomColor: colors.border,
     alignItems: 'center',
-  },
-  headerBackBtn: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-  },
-  backArrow: {
-    fontSize: 24,
-    color: COLORS.primary,
-    fontWeight: '700',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.primary,
-    flex: 1,
-    textAlign: 'center',
+    color: colors.primary,
   },
   listContent: {
     padding: SPACING.xl,
   },
   notifCard: {
     flexDirection: 'row',
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderRadius: SIZES.radiusMd,
     padding: SPACING.md,
     marginBottom: SPACING.sm,
     ...SHADOWS.sm,
     borderLeftWidth: 4,
-    borderLeftColor: COLORS.border,
+    borderLeftColor: colors.border,
   },
   notifCardUnread: {
-    borderLeftColor: COLORS.primary,
+    borderLeftColor: colors.primary,
     backgroundColor: 'rgba(37, 87, 167, 0.02)',
   },
   notifIconContainer: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: SPACING.md,
@@ -295,48 +268,31 @@ const styles = StyleSheet.create({
   notifTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     flex: 1,
   },
   notifTitleUnread: {
-    color: COLORS.text,
+    color: colors.text,
     fontWeight: '800',
   },
   unreadDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     marginLeft: SPACING.xs,
   },
   notifMessage: {
     fontSize: 13,
-    color: COLORS.text,
+    color: colors.text,
     lineHeight: 18,
   },
   notifTime: {
     fontSize: 10,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     marginTop: 6,
   },
   footerLoader: {
     marginVertical: SPACING.md,
-  },
-  emptyContainer: {
-    backgroundColor: COLORS.white,
-    borderRadius: SIZES.radiusMd,
-    padding: SPACING.xxl,
-    alignItems: 'center',
-    marginTop: SPACING.xl,
-    ...SHADOWS.sm,
-  },
-  emptyIcon: {
-    fontSize: 36,
-    marginBottom: SPACING.sm,
-  },
-  emptyText: {
-    color: COLORS.textMuted,
-    fontSize: 14,
-    fontWeight: '500',
   },
 });

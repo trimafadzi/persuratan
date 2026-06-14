@@ -13,7 +13,8 @@ import {
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { apiClient } from '../api/client';
-import { COLORS, SPACING, SIZES, SHADOWS } from '../theme/theme';
+import { SPACING, SIZES, SHADOWS, ThemeColors } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
 
 interface SuratKeluarDetail {
   id: number;
@@ -31,6 +32,9 @@ interface SuratKeluarDetail {
 }
 
 export default function SuratKeluarDetailScreen() {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
+
   const route = useRoute<any>();
   const navigation = useNavigation();
   const suratId = route.params?.id;
@@ -77,17 +81,17 @@ export default function SuratKeluarDetailScreen() {
 
   const getSifatTextColor = (sifat: string) => {
     switch (sifat) {
-      case 'segera': return COLORS.danger;
-      case 'penting': return COLORS.warningDark;
+      case 'segera': return colors.danger;
+      case 'penting': return colors.warningDark;
       case 'rahasia': return '#7c3aed';
-      default: return COLORS.textMuted;
+      default: return colors.textMuted;
     }
   };
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -107,7 +111,7 @@ export default function SuratKeluarDetailScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
       
       {/* Header */}
       <View style={styles.header}>
@@ -124,7 +128,7 @@ export default function SuratKeluarDetailScreen() {
           <View style={styles.badgeRow}>
             {/* Status Badge */}
             <View style={[styles.badge, { backgroundColor: '#dcfce7' }]}>
-              <Text style={[styles.badgeText, { color: COLORS.successLight }]}>
+              <Text style={[styles.badgeText, { color: colors.successLight }]}>
                 {surat.status ? surat.status.toUpperCase() : 'APPROVED'}
               </Text>
             </View>
@@ -194,14 +198,14 @@ export default function SuratKeluarDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -212,28 +216,28 @@ const styles = StyleSheet.create({
     padding: SPACING.xl,
   },
   errorText: {
-    color: COLORS.danger,
+    color: colors.danger,
     fontSize: 16,
     fontWeight: '600',
     marginBottom: SPACING.md,
     textAlign: 'center',
   },
   backButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     paddingHorizontal: SPACING.xl,
     paddingVertical: SPACING.md,
     borderRadius: SIZES.radiusSm,
   },
   backButtonText: {
-    color: COLORS.white,
+    color: colors.white,
     fontWeight: '700',
   },
   header: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     paddingVertical: SPACING.md,
     paddingHorizontal: SPACING.xl,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -245,13 +249,13 @@ const styles = StyleSheet.create({
   },
   backArrow: {
     fontSize: 24,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '700',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.primary,
+    color: colors.primary,
     flex: 1,
     textAlign: 'center',
   },
@@ -259,7 +263,7 @@ const styles = StyleSheet.create({
     padding: SPACING.xl,
   },
   detailsCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderRadius: SIZES.radiusLg,
     padding: SPACING.xl,
     ...SHADOWS.sm,
@@ -283,18 +287,18 @@ const styles = StyleSheet.create({
   perihalText: {
     fontSize: 18,
     fontWeight: '800',
-    color: COLORS.text,
+    color: colors.text,
     lineHeight: 24,
     marginBottom: SPACING.xs,
   },
   nomorText: {
     fontSize: 12,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     fontWeight: '500',
   },
   divider: {
     height: 1,
-    backgroundColor: COLORS.border,
+    backgroundColor: colors.border,
     marginVertical: SPACING.md,
   },
   infoRow: {
@@ -304,12 +308,12 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 13,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     fontWeight: '500',
   },
   infoValue: {
     fontSize: 13,
-    color: COLORS.text,
+    color: colors.text,
     fontWeight: '600',
     flex: 1,
     textAlign: 'right',
@@ -317,23 +321,23 @@ const styles = StyleSheet.create({
   },
   isiSection: {
     marginTop: SPACING.md,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
     padding: SPACING.md,
     borderRadius: SIZES.radiusSm,
   },
   isiTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: COLORS.primary,
+    color: colors.primary,
     marginBottom: SPACING.xs,
   },
   isiText: {
     fontSize: 13,
-    color: COLORS.text,
+    color: colors.text,
     lineHeight: 18,
   },
   attachmentCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderRadius: SIZES.radiusLg,
     padding: SPACING.xl,
     ...SHADOWS.sm,
@@ -342,7 +346,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: COLORS.primary,
+    color: colors.primary,
     marginBottom: SPACING.md,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -350,7 +354,7 @@ const styles = StyleSheet.create({
   attachmentBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
     borderRadius: SIZES.radiusSm,
     padding: SPACING.md,
   },
@@ -365,26 +369,26 @@ const styles = StyleSheet.create({
   attachmentName: {
     fontSize: 13,
     fontWeight: '700',
-    color: COLORS.text,
+    color: colors.text,
   },
   attachmentSize: {
     fontSize: 11,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     marginTop: 2,
   },
   openBtn: {
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: colors.primaryLight,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs,
     borderRadius: SIZES.radiusSm,
   },
   openBtnText: {
-    color: COLORS.white,
+    color: colors.white,
     fontWeight: '700',
     fontSize: 12,
   },
   noAttachmentBox: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderRadius: SIZES.radiusLg,
     padding: SPACING.xl,
     alignItems: 'center',
@@ -393,7 +397,7 @@ const styles = StyleSheet.create({
   },
   noAttachmentText: {
     fontSize: 13,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     fontWeight: '500',
   },
 });

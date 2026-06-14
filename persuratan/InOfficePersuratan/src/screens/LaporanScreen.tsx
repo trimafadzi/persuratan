@@ -4,7 +4,6 @@ import {
   Text,
   View,
   TouchableOpacity,
-  ActivityIndicator,
   SafeAreaView,
   StatusBar,
   ScrollView,
@@ -12,7 +11,9 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { apiClient } from '../api/client';
-import { COLORS, SPACING, SIZES, SHADOWS } from '../theme/theme';
+import { SPACING, SIZES, SHADOWS, ThemeColors } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
+import { ChartLoader } from '../components/SkeletonLoader';
 
 interface StatsData {
   total_masuk: number;
@@ -40,6 +41,9 @@ interface EmployeeItem {
 }
 
 export default function LaporanScreen() {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
+
   const navigation = useNavigation();
 
   const [activeTab, setActiveTab] = useState<'stats' | 'kinerja'>('stats');
@@ -87,11 +91,11 @@ export default function LaporanScreen() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'belum_dibaca': return COLORS.danger;
-      case 'dibaca': return COLORS.warningDark;
-      case 'didisposisi': return COLORS.primaryLight;
-      case 'selesai': return COLORS.successLight;
-      default: return COLORS.textMuted;
+      case 'belum_dibaca': return colors.danger;
+      case 'dibaca': return colors.warningDark;
+      case 'didisposisi': return colors.primaryLight;
+      case 'selesai': return colors.successLight;
+      default: return colors.textMuted;
     }
   };
 
@@ -106,9 +110,9 @@ export default function LaporanScreen() {
   };
 
   const getScoreColor = (skor: number) => {
-    if (skor >= 80) return COLORS.successLight;
-    if (skor >= 50) return COLORS.warningDark;
-    return COLORS.danger;
+    if (skor >= 80) return colors.successLight;
+    if (skor >= 50) return colors.warningDark;
+    return colors.danger;
   };
 
   const getRankBadge = (rank: number) => {
@@ -179,7 +183,7 @@ export default function LaporanScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
 
       {/* Header */}
       <View style={styles.header}>
@@ -211,15 +215,15 @@ export default function LaporanScreen() {
       </View>
 
       {loading ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-        </View>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <ChartLoader />
+        </ScrollView>
       ) : (
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[COLORS.primary]} />
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[colors.primary]} />
           }
         >
           {activeTab === 'stats' ? (
@@ -340,10 +344,10 @@ export default function LaporanScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   centerContainer: {
     flex: 1,
@@ -351,11 +355,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     paddingVertical: SPACING.md,
     paddingHorizontal: SPACING.xl,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -367,21 +371,21 @@ const styles = StyleSheet.create({
   },
   backArrow: {
     fontSize: 24,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '700',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.primary,
+    color: colors.primary,
     flex: 1,
     textAlign: 'center',
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
   },
   tabBtn: {
     flex: 1,
@@ -391,15 +395,15 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   tabBtnActive: {
-    borderBottomColor: COLORS.primary,
+    borderBottomColor: colors.primary,
   },
   tabBtnText: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.textMuted,
+    color: colors.textMuted,
   },
   tabBtnTextActive: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '700',
   },
   scrollContent: {
@@ -413,7 +417,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: '48%',
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderRadius: SIZES.radiusMd,
     padding: SPACING.md,
     marginBottom: SPACING.md,
@@ -427,16 +431,16 @@ const styles = StyleSheet.create({
   statVal: {
     fontSize: 20,
     fontWeight: '800',
-    color: COLORS.text,
+    color: colors.text,
   },
   statLabel: {
     fontSize: 11,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     fontWeight: '600',
     marginTop: 2,
   },
   card: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderRadius: SIZES.radiusLg,
     padding: SPACING.xl,
     ...SHADOWS.sm,
@@ -445,13 +449,13 @@ const styles = StyleSheet.create({
   cardSectionTitle: {
     fontSize: 13,
     fontWeight: '800',
-    color: COLORS.primary,
+    color: colors.primary,
     marginBottom: SPACING.md,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   chartContainer: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderRadius: SIZES.radiusLg,
     padding: SPACING.xl,
     ...SHADOWS.sm,
@@ -460,7 +464,7 @@ const styles = StyleSheet.create({
   chartTitle: {
     fontSize: 13,
     fontWeight: '800',
-    color: COLORS.primary,
+    color: colors.primary,
     marginBottom: SPACING.lg,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -472,7 +476,7 @@ const styles = StyleSheet.create({
     height: 160,
     paddingBottom: SPACING.xs,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
   },
   chartCol: {
     alignItems: 'center',
@@ -492,21 +496,21 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 3,
   },
   barMasuk: {
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: colors.primaryLight,
   },
   barKeluar: {
-    backgroundColor: COLORS.accent,
+    backgroundColor: colors.accent,
   },
   barValueText: {
     fontSize: 9,
     fontWeight: '700',
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     marginTop: 2,
   },
   chartLabelText: {
     fontSize: 9,
     fontWeight: '600',
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     marginTop: 6,
     textAlign: 'center',
   },
@@ -529,7 +533,7 @@ const styles = StyleSheet.create({
   legendText: {
     fontSize: 11,
     fontWeight: '600',
-    color: COLORS.textMuted,
+    color: colors.textMuted,
   },
   breakdownList: {
     gap: SPACING.md,
@@ -545,16 +549,16 @@ const styles = StyleSheet.create({
   statusLabelText: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.text,
+    color: colors.text,
   },
   statusCountText: {
     fontSize: 12,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     fontWeight: '600',
   },
   progressBarBg: {
     height: 8,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
     borderRadius: 4,
     overflow: 'hidden',
   },
@@ -565,12 +569,12 @@ const styles = StyleSheet.create({
   leaderboardTitle: {
     fontSize: 15,
     fontWeight: '800',
-    color: COLORS.primaryDark,
+    color: colors.primaryDark,
     marginBottom: SPACING.md,
   },
   employeeCard: {
     flexDirection: 'row',
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderRadius: SIZES.radiusMd,
     padding: SPACING.md,
     marginBottom: SPACING.sm,
@@ -585,7 +589,7 @@ const styles = StyleSheet.create({
   rankText: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.textMuted,
+    color: colors.textMuted,
   },
   topRankText: {
     fontSize: 20,
@@ -598,11 +602,11 @@ const styles = StyleSheet.create({
   empName: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.text,
+    color: colors.text,
   },
   empJob: {
     fontSize: 11,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     marginTop: 2,
   },
   empStatsRow: {
@@ -612,11 +616,11 @@ const styles = StyleSheet.create({
   },
   empStatCol: {
     fontSize: 10,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
   },
   boldText: {
     fontWeight: '700',
-    color: COLORS.text,
+    color: colors.text,
   },
   scoreBadge: {
     width: 46,
@@ -628,22 +632,22 @@ const styles = StyleSheet.create({
   scoreText: {
     fontSize: 16,
     fontWeight: '800',
-    color: COLORS.white,
+    color: colors.white,
   },
   scoreLabel: {
     fontSize: 8,
-    color: COLORS.white,
+    color: colors.white,
     fontWeight: '600',
     textTransform: 'uppercase',
   },
   emptyCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderRadius: SIZES.radiusMd,
     padding: SPACING.xl,
     alignItems: 'center',
   },
   emptyText: {
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     fontSize: 13,
     fontStyle: 'italic',
   },

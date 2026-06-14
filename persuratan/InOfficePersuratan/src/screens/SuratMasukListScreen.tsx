@@ -13,7 +13,10 @@ import {
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { apiClient } from '../api/client';
-import { COLORS, SPACING, SIZES, SHADOWS } from '../theme/theme';
+import { SPACING, SIZES, SHADOWS, ThemeColors } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
+import { CardListLoader } from '../components/SkeletonLoader';
+import EmptyState from '../components/EmptyState';
 
 interface SuratMasukItem {
   id: number;
@@ -46,18 +49,18 @@ const SIFAT_FILTERS = [
 
 export default function SuratMasukListScreen() {
   const navigation = useNavigation<any>();
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
 
   const [suratList, setSuratList] = useState<SuratMasukItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Filter & Search states
   const [search, setSearch] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedSifat, setSelectedSifat] = useState('');
 
-  // Pagination states
   const [page, setPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
 
@@ -99,14 +102,12 @@ export default function SuratMasukListScreen() {
     }
   }, [search, selectedStatus, selectedSifat]);
 
-  // Muat ulang ketika screen mendapat fokus kembali (misalnya setelah buat surat baru atau tandai baca)
   useFocusEffect(
     useCallback(() => {
       fetchSurat(1);
     }, [fetchSurat])
   );
 
-  // Trigger search saat search input berubah (atau ditekan enter)
   const handleSearchSubmit = () => {
     fetchSurat(1);
   };
@@ -133,20 +134,20 @@ export default function SuratMasukListScreen() {
 
   const getSifatTextColor = (sifat: string) => {
     switch (sifat) {
-      case 'segera': return COLORS.danger;
-      case 'penting': return COLORS.warningDark;
+      case 'segera': return colors.danger;
+      case 'penting': return colors.warningDark;
       case 'rahasia': return '#7c3aed';
-      default: return COLORS.textMuted;
+      default: return colors.textMuted;
     }
   };
 
   const getStatusDotColor = (color: string) => {
     switch (color) {
-      case 'danger': return COLORS.danger;
-      case 'warning': return COLORS.warningDark;
-      case 'info': return COLORS.info;
-      case 'success': return COLORS.successLight;
-      default: return COLORS.textMuted;
+      case 'danger': return colors.danger;
+      case 'warning': return colors.warningDark;
+      case 'info': return colors.info;
+      case 'success': return colors.successLight;
+      default: return colors.textMuted;
     }
   };
 
@@ -186,7 +187,7 @@ export default function SuratMasukListScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
       
       {/* Header */}
       <View style={styles.header}>
@@ -199,7 +200,7 @@ export default function SuratMasukListScreen() {
           <TextInput
             style={styles.searchInput}
             placeholder="Cari perihal, nomor, atau pengirim..."
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor={colors.textMuted}
             value={search}
             onChangeText={setSearch}
             onSubmitEditing={handleSearchSubmit}
@@ -221,7 +222,6 @@ export default function SuratMasukListScreen() {
 
       {/* Dynamic Filters Bar */}
       <View style={styles.filterSection}>
-        {/* Status Filters */}
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false} 
@@ -237,7 +237,6 @@ export default function SuratMasukListScreen() {
               ]}
               onPress={() => {
                 setSelectedStatus(f.value);
-                // Trigger reload via state change hook
               }}
             >
               <Text
@@ -252,7 +251,6 @@ export default function SuratMasukListScreen() {
           ))}
         </ScrollView>
 
-        {/* Sifat Filters */}
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false} 
@@ -265,7 +263,7 @@ export default function SuratMasukListScreen() {
               style={[
                 styles.filterTag,
                 selectedSifat === f.value && styles.filterTagActive,
-                selectedSifat === f.value && { backgroundColor: 'rgba(230, 57, 70, 0.1)', borderColor: COLORS.accent },
+                selectedSifat === f.value && { backgroundColor: 'rgba(230, 57, 70, 0.1)', borderColor: colors.accent },
               ]}
               onPress={() => {
                 setSelectedSifat(f.value);
@@ -275,7 +273,7 @@ export default function SuratMasukListScreen() {
                 style={[
                   styles.filterTagText,
                   selectedSifat === f.value && styles.filterTagTextActive,
-                  selectedSifat === f.value && { color: COLORS.accent },
+                  selectedSifat === f.value && { color: colors.accent },
                 ]}
               >
                 {f.label}
@@ -285,14 +283,11 @@ export default function SuratMasukListScreen() {
         </ScrollView>
       </View>
 
-      {/* Auto reload when filters change */}
       <FilterEffect trigger={[selectedStatus, selectedSifat]} effect={() => fetchSurat(1)} />
 
       {/* Mail List */}
       {loading ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-        </View>
+        <CardListLoader itemCount={6} />
       ) : (
         <FlatList
           data={suratList}
@@ -307,16 +302,13 @@ export default function SuratMasukListScreen() {
             loadingMore ? (
               <ActivityIndicator 
                 size="small" 
-                color={COLORS.primary} 
+                color={colors.primary} 
                 style={styles.footerLoader} 
               />
             ) : null
           }
           ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyIcon}>📬</Text>
-              <Text style={styles.emptyText}>Tidak ada surat masuk yang cocok.</Text>
-            </View>
+            <EmptyState icon="📬" title="Tidak ada surat masuk yang cocok." />
           }
         />
       )}
@@ -333,7 +325,6 @@ export default function SuratMasukListScreen() {
   );
 }
 
-// Custom Helper component untuk trigger callback ketika state berubah
 function FilterEffect({ trigger, effect }: { trigger: any[]; effect: () => void }) {
   useEffect(() => {
     effect();
@@ -342,35 +333,30 @@ function FilterEffect({ trigger, effect }: { trigger: any[]; effect: () => void 
   return null;
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: colors.background,
   },
   header: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     paddingVertical: SPACING.md,
     paddingHorizontal: SPACING.xl,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
     alignItems: 'center',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.primary,
+    color: colors.primary,
   },
   searchSection: {
     flexDirection: 'row',
     paddingHorizontal: SPACING.xl,
     paddingTop: SPACING.md,
     paddingBottom: SPACING.xs,
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     alignItems: 'center',
     gap: SPACING.sm,
   },
@@ -378,9 +364,9 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     borderRadius: SIZES.radiusSm,
     paddingRight: SPACING.xs,
   },
@@ -389,32 +375,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingVertical: 8,
     fontSize: 13,
-    color: COLORS.text,
+    color: colors.text,
   },
   clearSearch: {
     padding: SPACING.xs,
   },
   clearSearchText: {
     fontSize: 18,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     fontWeight: '700',
   },
   searchButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     paddingHorizontal: SPACING.md,
     paddingVertical: 9,
     borderRadius: SIZES.radiusSm,
   },
   searchButtonText: {
-    color: COLORS.white,
+    color: colors.white,
     fontWeight: '700',
     fontSize: 12,
   },
   filterSection: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     paddingBottom: SPACING.sm,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
   },
   filterRow: {
     flexDirection: 'row',
@@ -429,28 +415,28 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 100,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.background,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
   },
   filterTagActive: {
     backgroundColor: 'rgba(37, 87, 167, 0.1)',
-    borderColor: COLORS.primary,
+    borderColor: colors.primary,
   },
   filterTagText: {
     fontSize: 11,
     fontWeight: '600',
-    color: COLORS.textMuted,
+    color: colors.textMuted,
   },
   filterTagTextActive: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '700',
   },
   listContent: {
     padding: SPACING.xl,
-    paddingBottom: 80, // Space agar FAB tidak menutupi item terakhir
+    paddingBottom: 80,
   },
   suratCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderRadius: SIZES.radiusMd,
     padding: SPACING.md,
     marginBottom: SPACING.sm,
@@ -477,16 +463,16 @@ const styles = StyleSheet.create({
   suratPerihal: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.text,
+    color: colors.text,
   },
   suratMeta: {
     fontSize: 12,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     marginTop: 2,
   },
   suratDate: {
     fontSize: 10,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     marginTop: 2,
   },
   sifatBadge: {
@@ -502,23 +488,6 @@ const styles = StyleSheet.create({
   footerLoader: {
     marginVertical: SPACING.md,
   },
-  emptyContainer: {
-    backgroundColor: COLORS.white,
-    borderRadius: SIZES.radiusMd,
-    padding: SPACING.xxl,
-    alignItems: 'center',
-    marginTop: SPACING.xl,
-    ...SHADOWS.sm,
-  },
-  emptyIcon: {
-    fontSize: 36,
-    marginBottom: SPACING.sm,
-  },
-  emptyText: {
-    color: COLORS.textMuted,
-    fontSize: 14,
-    fontWeight: '500',
-  },
   fab: {
     position: 'absolute',
     right: SPACING.xl,
@@ -526,14 +495,14 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: COLORS.accent,
+    backgroundColor: colors.accent,
     justifyContent: 'center',
     alignItems: 'center',
     ...SHADOWS.lg,
   },
   fabText: {
     fontSize: 28,
-    color: COLORS.white,
+    color: colors.white,
     fontWeight: '600',
     lineHeight: 32,
   },

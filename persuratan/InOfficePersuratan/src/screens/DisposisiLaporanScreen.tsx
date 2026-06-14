@@ -12,10 +12,11 @@ import {
   Alert,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { launchImageLibrary } from 'react-native-image-picker';
+import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import DocumentPicker from 'react-native-document-picker';
 import { apiClient } from '../api/client';
-import { COLORS, SPACING, SIZES, SHADOWS } from '../theme/theme';
+import { SPACING, SIZES, SHADOWS, ThemeColors } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
 
 interface SelectedFile {
   uri: string;
@@ -24,6 +25,9 @@ interface SelectedFile {
 }
 
 export default function DisposisiLaporanScreen() {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
+
   const route = useRoute<any>();
   const navigation = useNavigation();
   const disposisiId = route.params?.id;
@@ -79,6 +83,33 @@ export default function DisposisiLaporanScreen() {
     );
   };
 
+  // Take Photo with Camera
+  const handleTakePhoto = () => {
+    launchCamera(
+      {
+        mediaType: 'photo',
+        quality: 0.8,
+      },
+      (response) => {
+        if (response.didCancel) {
+          console.log('[Camera] User cancelled');
+        } else if (response.errorCode) {
+          console.error('[Camera] Error:', response.errorMessage);
+        } else if (response.assets && response.assets.length > 0) {
+          const asset = response.assets[0];
+          setSelectedFiles((prev) => [
+            ...prev,
+            {
+              uri: asset.uri || '',
+              name: asset.fileName || 'photo.jpg',
+              type: asset.type || 'image/jpeg',
+            },
+          ]);
+        }
+      }
+    );
+  };
+
   const handleRemoveFile = (index: number) => {
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   };
@@ -121,7 +152,7 @@ export default function DisposisiLaporanScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
 
       {/* Header */}
       <View style={styles.header}>
@@ -141,7 +172,7 @@ export default function DisposisiLaporanScreen() {
             multiline
             numberOfLines={6}
             placeholder="Jelaskan langkah-langkah penyelesaian tugas atau hasil yang telah dicapai..."
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor={colors.textMuted}
             value={isiLaporan}
             onChangeText={setIsiLaporan}
             textAlignVertical="top"
@@ -154,10 +185,13 @@ export default function DisposisiLaporanScreen() {
           
           <View style={styles.pickerButtonsRow}>
             <TouchableOpacity style={styles.pickerBtn} onPress={handlePickDocument}>
-              <Text style={styles.pickerBtnText}>📄 Pilih Berkas</Text>
+              <Text style={styles.pickerBtnText}>📄 Berkas</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.pickerBtn} onPress={handlePickImage}>
-              <Text style={styles.pickerBtnText}>🖼️ Galeri Foto</Text>
+              <Text style={styles.pickerBtnText}>🖼️ Galeri</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.pickerBtn} onPress={handleTakePhoto}>
+              <Text style={styles.pickerBtnText}>📷 Kamera</Text>
             </TouchableOpacity>
           </View>
 
@@ -189,7 +223,7 @@ export default function DisposisiLaporanScreen() {
           disabled={submitting}
         >
           {submitting ? (
-            <ActivityIndicator size="small" color={COLORS.white} />
+            <ActivityIndicator size="small" color={colors.white} />
           ) : (
             <Text style={styles.submitButtonText}>Kirim Laporan Pelaksanaan 🚀</Text>
           )}
@@ -199,17 +233,17 @@ export default function DisposisiLaporanScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   header: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     paddingVertical: SPACING.md,
     paddingHorizontal: SPACING.xl,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -221,13 +255,13 @@ const styles = StyleSheet.create({
   },
   backArrow: {
     fontSize: 24,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '700',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.primary,
+    color: colors.primary,
     flex: 1,
     textAlign: 'center',
   },
@@ -240,18 +274,18 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '700',
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: SPACING.xs,
   },
   textArea: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     borderRadius: SIZES.radiusSm,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.md,
     fontSize: 14,
-    color: COLORS.text,
+    color: colors.text,
     minHeight: 150,
     ...SHADOWS.sm,
   },
@@ -267,19 +301,19 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: COLORS.primary,
+    borderColor: colors.primary,
   },
   pickerBtnText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 13,
     fontWeight: '700',
   },
   filesList: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderRadius: SIZES.radiusSm,
     padding: SPACING.sm,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     ...SHADOWS.sm,
   },
   fileRow: {
@@ -287,7 +321,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: SPACING.xs,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
   },
   fileIcon: {
     fontSize: 16,
@@ -295,7 +329,7 @@ const styles = StyleSheet.create({
   },
   fileName: {
     fontSize: 13,
-    color: COLORS.text,
+    color: colors.text,
     flex: 1,
   },
   removeFileBtn: {
@@ -303,11 +337,11 @@ const styles = StyleSheet.create({
   },
   removeFileText: {
     fontSize: 20,
-    color: COLORS.danger,
+    color: colors.danger,
     fontWeight: '700',
   },
   submitButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     borderRadius: SIZES.radiusSm,
     paddingVertical: SPACING.md,
     alignItems: 'center',
@@ -317,7 +351,7 @@ const styles = StyleSheet.create({
     ...SHADOWS.sm,
   },
   submitButtonText: {
-    color: COLORS.white,
+    color: colors.white,
     fontSize: 15,
     fontWeight: '700',
   },

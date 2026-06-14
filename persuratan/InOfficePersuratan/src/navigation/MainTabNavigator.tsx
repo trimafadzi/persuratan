@@ -1,44 +1,48 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { COLORS } from '../theme/theme';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTheme } from '../theme/ThemeContext';
 import DashboardScreen from '../screens/DashboardScreen';
 import SuratMasukNavigator from './SuratMasukNavigator';
-import SuratKeluarNavigator from './SuratKeluarNavigator';
 import DisposisiNavigator from './DisposisiNavigator';
+import NotifikasiScreen from '../screens/NotifikasiScreen';
 import ProfilScreen from '../screens/ProfilScreen';
 
 export type MainTabParamList = {
   DashboardTab: undefined;
   SuratMasukTab: undefined;
-  SuratKeluarTab: undefined;
   DisposisiTab: undefined;
+  NotifikasiTab: undefined;
   ProfilTab: undefined;
 };
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-// Custom Tab Bar Icon Renderer menggunakan Emojis & styled container
 interface TabBarIconProps {
   focused: boolean;
-  icon: string;
+  name: string;
+  color: string;
 }
 
-const TabIcon = ({ focused, icon }: TabBarIconProps) => (
-  <View style={[styles.iconContainer, focused && styles.iconContainerFocused]}>
-    <Text style={[styles.iconText, focused && styles.iconTextFocused]}>{icon}</Text>
+const TabBarIcon = ({ focused, name, color }: TabBarIconProps) => (
+  <View style={styles.iconWrapper}>
+    <Icon name={name} size={focused ? 26 : 22} color={color} />
   </View>
 );
 
 export default function MainTabNavigator() {
+  const { colors } = useTheme();
+
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.textMuted,
-        tabBarStyle: styles.tabBar,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textMuted,
+        tabBarStyle: [styles.tabBar, { backgroundColor: colors.white, borderTopColor: colors.border }],
         tabBarLabelStyle: styles.tabBarLabel,
+        tabBarHideOnKeyboard: true,
       }}
     >
       <Tab.Screen
@@ -46,23 +50,19 @@ export default function MainTabNavigator() {
         component={DashboardScreen}
         options={{
           tabBarLabel: 'Dashboard',
-          tabBarIcon: ({ focused }: { focused: boolean }) => <TabIcon focused={focused} icon="📊" />,
+          tabBarIcon: ({ focused, color }) => (
+            <TabBarIcon focused={focused} name="view-dashboard" color={color} />
+          ),
         }}
       />
       <Tab.Screen
         name="SuratMasukTab"
         component={SuratMasukNavigator}
         options={{
-          tabBarLabel: 'Surat Masuk',
-          tabBarIcon: ({ focused }: { focused: boolean }) => <TabIcon focused={focused} icon="📬" />,
-        }}
-      />
-      <Tab.Screen
-        name="SuratKeluarTab"
-        component={SuratKeluarNavigator}
-        options={{
-          tabBarLabel: 'Surat Keluar',
-          tabBarIcon: ({ focused }: { focused: boolean }) => <TabIcon focused={focused} icon="📤" />,
+          tabBarLabel: 'Surat',
+          tabBarIcon: ({ focused, color }) => (
+            <TabBarIcon focused={focused} name="email-arrow-left" color={color} />
+          ),
         }}
       />
       <Tab.Screen
@@ -70,7 +70,19 @@ export default function MainTabNavigator() {
         component={DisposisiNavigator}
         options={{
           tabBarLabel: 'Disposisi',
-          tabBarIcon: ({ focused }: { focused: boolean }) => <TabIcon focused={focused} icon="📋" />,
+          tabBarIcon: ({ focused, color }) => (
+            <TabBarIcon focused={focused} name="file-document-edit" color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="NotifikasiTab"
+        component={NotifikasiScreen}
+        options={{
+          tabBarLabel: 'Notifikasi',
+          tabBarIcon: ({ focused, color }) => (
+            <TabBarIcon focused={focused} name="bell" color={color} />
+          ),
         }}
       />
       <Tab.Screen
@@ -78,7 +90,9 @@ export default function MainTabNavigator() {
         component={ProfilScreen}
         options={{
           tabBarLabel: 'Profil',
-          tabBarIcon: ({ focused }: { focused: boolean }) => <TabIcon focused={focused} icon="👤" />,
+          tabBarIcon: ({ focused, color }) => (
+            <TabBarIcon focused={focused} name="account-circle" color={color} />
+          ),
         }}
       />
     </Tab.Navigator>
@@ -87,9 +101,6 @@ export default function MainTabNavigator() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: COLORS.white,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
     height: 60,
     paddingBottom: 6,
     paddingTop: 6,
@@ -100,26 +111,14 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   tabBarLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
     marginTop: 2,
   },
-  iconContainer: {
+  iconWrapper: {
     width: 40,
     height: 28,
-    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'transparent',
-  },
-  iconContainerFocused: {
-    backgroundColor: 'rgba(37, 87, 167, 0.1)',
-  },
-  iconText: {
-    fontSize: 18,
-    opacity: 0.7,
-  },
-  iconTextFocused: {
-    opacity: 1,
   },
 });

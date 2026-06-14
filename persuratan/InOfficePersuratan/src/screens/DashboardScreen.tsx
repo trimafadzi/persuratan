@@ -6,14 +6,17 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  ActivityIndicator,
   SafeAreaView,
   StatusBar,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { apiClient } from '../api/client';
 import { useAuthStore } from '../store/authStore';
-import { COLORS, SPACING, SIZES, SHADOWS } from '../theme/theme';
+import { SPACING, SIZES, SHADOWS, ThemeColors } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
+import { DashboardLoader } from '../components/SkeletonLoader';
+import ErrorState from '../components/ErrorState';
+import EmptyState from '../components/EmptyState';
 
 interface DashboardStats {
   surat_belum_dibaca: number;
@@ -38,6 +41,9 @@ interface RecentSurat {
 export default function DashboardScreen() {
   const navigation = useNavigation<any>();
   const { user } = useAuthStore();
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
+
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentSurat, setRecentSurat] = useState<RecentSurat[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -78,7 +84,6 @@ export default function DashboardScreen() {
   };
 
   const handleSuratPress = (id: number) => {
-    // Navigasi silang ke stack SuratMasuk -> SuratMasukDetail
     navigation.navigate('SuratMasukTab', {
       screen: 'SuratMasukDetail',
       params: { id },
@@ -87,43 +92,44 @@ export default function DashboardScreen() {
 
   const getSifatColor = (sifat: string) => {
     switch (sifat) {
-      case 'segera': return '#fee2e2'; // Light red
-      case 'penting': return '#fef3c7'; // Light yellow
-      case 'rahasia': return '#f3e8ff'; // Light purple
-      default: return '#f1f5f9'; // Light gray
+      case 'segera': return '#fee2e2';
+      case 'penting': return '#fef3c7';
+      case 'rahasia': return '#f3e8ff';
+      default: return '#f1f5f9';
     }
   };
 
   const getSifatTextColor = (sifat: string) => {
     switch (sifat) {
-      case 'segera': return COLORS.danger;
-      case 'penting': return COLORS.warningDark;
+      case 'segera': return colors.danger;
+      case 'penting': return colors.warningDark;
       case 'rahasia': return '#7c3aed';
-      default: return COLORS.textMuted;
+      default: return colors.textMuted;
     }
   };
 
   const getStatusDotColor = (color: string) => {
     switch (color) {
-      case 'danger': return COLORS.danger;
-      case 'warning': return COLORS.warningDark;
-      case 'info': return COLORS.info;
-      case 'success': return COLORS.successLight;
-      default: return COLORS.textMuted;
+      case 'danger': return colors.danger;
+      case 'warning': return colors.warningDark;
+      case 'info': return colors.info;
+      case 'success': return colors.successLight;
+      default: return colors.textMuted;
     }
   };
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      </View>
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
+        <DashboardLoader />
+      </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
       
       {/* Top Header */}
       <View style={styles.header}>
@@ -134,7 +140,7 @@ export default function DashboardScreen() {
         <View style={styles.headerActions}>
           <TouchableOpacity 
             style={styles.headerIconBtn} 
-            onPress={() => navigation.navigate('Notifikasi')}
+            onPress={() => navigation.navigate('NotifikasiTab')}
             activeOpacity={0.7}
           >
             <Text style={styles.headerIconText}>🔔</Text>
@@ -159,23 +165,15 @@ export default function DashboardScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} />
         }
       >
-        {errorMsg ? (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{errorMsg}</Text>
-            <TouchableOpacity style={styles.retryButton} onPress={fetchData}>
-              <Text style={styles.retryButtonText}>Coba Lagi</Text>
-            </TouchableOpacity>
-          </View>
-        ) : null}
+        {errorMsg ? <ErrorState message={errorMsg} onRetry={fetchData} /> : null}
 
         {/* Stats Section */}
         <Text style={styles.sectionTitle}>Ringkasan Tugas</Text>
         <View style={styles.statsGrid}>
-          {/* Card 1: Belum Dibaca */}
-          <View style={[styles.statCard, { borderLeftColor: COLORS.danger }]}>
+          <View style={[styles.statCard, { borderLeftColor: colors.danger }]}>
             <View style={[styles.iconWrapper, { backgroundColor: '#fee2e2' }]}>
               <Text style={styles.cardEmoji}>📬</Text>
             </View>
@@ -183,8 +181,7 @@ export default function DashboardScreen() {
             <Text style={styles.statLabel}>Belum Dibaca</Text>
           </View>
 
-          {/* Card 2: Disposisi Pending */}
-          <View style={[styles.statCard, { borderLeftColor: COLORS.warningDark }]}>
+          <View style={[styles.statCard, { borderLeftColor: colors.warningDark }]}>
             <View style={[styles.iconWrapper, { backgroundColor: '#fef3c7' }]}>
               <Text style={styles.cardEmoji}>📋</Text>
             </View>
@@ -192,8 +189,7 @@ export default function DashboardScreen() {
             <Text style={styles.statLabel}>Disposisi Pending</Text>
           </View>
 
-          {/* Card 3: Deadline Hari Ini */}
-          <View style={[styles.statCard, { borderLeftColor: COLORS.info }]}>
+          <View style={[styles.statCard, { borderLeftColor: colors.info }]}>
             <View style={[styles.iconWrapper, { backgroundColor: '#eff6ff' }]}>
               <Text style={styles.cardEmoji}>⏰</Text>
             </View>
@@ -201,8 +197,7 @@ export default function DashboardScreen() {
             <Text style={styles.statLabel}>Deadline Hari Ini</Text>
           </View>
 
-          {/* Card 4: Selesai Bulan Ini */}
-          <View style={[styles.statCard, { borderLeftColor: COLORS.successLight }]}>
+          <View style={[styles.statCard, { borderLeftColor: colors.successLight }]}>
             <View style={[styles.iconWrapper, { backgroundColor: '#dcfce7' }]}>
               <Text style={styles.cardEmoji}>✅</Text>
             </View>
@@ -224,10 +219,7 @@ export default function DashboardScreen() {
 
         <View style={styles.listContainer}>
           {recentSurat.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyIcon}>✉️</Text>
-              <Text style={styles.emptyText}>Tidak ada surat masuk terbaru.</Text>
-            </View>
+            <EmptyState icon="✉️" title="Tidak ada surat masuk terbaru." />
           ) : (
             recentSurat.map((item) => (
               <TouchableOpacity
@@ -237,7 +229,6 @@ export default function DashboardScreen() {
                 activeOpacity={0.7}
               >
                 <View style={styles.suratLeft}>
-                  {/* Status Indicator Dot */}
                   <View 
                     style={[
                       styles.statusDot, 
@@ -257,7 +248,6 @@ export default function DashboardScreen() {
                   </View>
                 </View>
 
-                {/* Sifat Badge */}
                 <View 
                   style={[
                     styles.sifatBadge, 
@@ -282,83 +272,39 @@ export default function DashboardScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: colors.background,
   },
   header: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     paddingHorizontal: SPACING.xl,
     paddingVertical: SPACING.lg,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
   },
   welcomeText: {
     fontSize: 18,
     fontWeight: '800',
-    color: COLORS.primary,
+    color: colors.primary,
   },
   roleText: {
     fontSize: 13,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     fontWeight: '500',
     marginTop: 2,
-  },
-  hospitalBadge: {
-    backgroundColor: COLORS.accent,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.xs,
-    borderRadius: SIZES.radiusSm,
-  },
-  hospitalText: {
-    color: COLORS.white,
-    fontWeight: '800',
-    fontSize: 10,
-    letterSpacing: 0.5,
   },
   scrollContent: {
     padding: SPACING.xl,
   },
-  errorContainer: {
-    backgroundColor: '#fff0f0',
-    borderWidth: 1,
-    borderColor: '#fca5a5',
-    borderRadius: SIZES.radiusMd,
-    padding: SPACING.lg,
-    alignItems: 'center',
-    marginBottom: SPACING.lg,
-  },
-  errorText: {
-    color: '#991b1b',
-    fontWeight: '600',
-    fontSize: 14,
-    marginBottom: SPACING.md,
-  },
-  retryButton: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.sm,
-    borderRadius: SIZES.radiusSm,
-  },
-  retryButtonText: {
-    color: COLORS.white,
-    fontWeight: '700',
-    fontSize: 12,
-  },
   sectionTitle: {
     fontSize: 15,
     fontWeight: '800',
-    color: COLORS.primaryDark,
+    color: colors.primaryDark,
     marginBottom: SPACING.md,
     letterSpacing: 0.2,
   },
@@ -370,7 +316,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: '48%',
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderRadius: SIZES.radiusMd,
     padding: SPACING.md,
     marginBottom: SPACING.md,
@@ -391,12 +337,12 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 26,
     fontWeight: '800',
-    color: COLORS.text,
+    color: colors.text,
     lineHeight: 30,
   },
   statLabel: {
     fontSize: 12,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     fontWeight: '600',
     marginTop: 2,
   },
@@ -408,30 +354,14 @@ const styles = StyleSheet.create({
   },
   viewAllText: {
     fontSize: 13,
-    color: COLORS.primaryLight,
+    color: colors.primaryLight,
     fontWeight: '700',
   },
   listContainer: {
     width: '100%',
   },
-  emptyContainer: {
-    backgroundColor: COLORS.white,
-    borderRadius: SIZES.radiusMd,
-    padding: SPACING.xxl,
-    alignItems: 'center',
-    ...SHADOWS.sm,
-  },
-  emptyIcon: {
-    fontSize: 36,
-    marginBottom: SPACING.sm,
-  },
-  emptyText: {
-    color: COLORS.textMuted,
-    fontSize: 14,
-    fontWeight: '500',
-  },
   suratCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderRadius: SIZES.radiusMd,
     padding: SPACING.md,
     marginBottom: SPACING.sm,
@@ -458,16 +388,16 @@ const styles = StyleSheet.create({
   suratPerihal: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.text,
+    color: colors.text,
   },
   suratMeta: {
     fontSize: 12,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     marginTop: 2,
   },
   suratDate: {
     fontSize: 10,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     marginTop: 2,
   },
   sifatBadge: {
@@ -488,11 +418,11 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     position: 'relative',
   },
   headerIconText: {
@@ -502,7 +432,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -4,
     right: -4,
-    backgroundColor: COLORS.danger,
+    backgroundColor: colors.danger,
     borderRadius: 9,
     minWidth: 18,
     height: 18,
@@ -511,7 +441,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 3,
   },
   badgeText: {
-    color: COLORS.white,
+    color: colors.white,
     fontSize: 9,
     fontWeight: '800',
     textAlign: 'center',

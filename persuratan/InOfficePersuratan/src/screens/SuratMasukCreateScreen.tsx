@@ -15,11 +15,15 @@ import {
   FlatList,
   Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { launchImageLibrary } from 'react-native-image-picker';
+import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import DocumentPicker from 'react-native-document-picker';
 import { apiClient } from '../api/client';
-import { COLORS, SPACING, SIZES, SHADOWS } from '../theme/theme';
+import { SPACING, SIZES, SHADOWS, ThemeColors } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
+
+const DRAFT_KEY = '@draft_surat_masuk';
 
 interface UnitKerja {
   id: number;
@@ -40,6 +44,9 @@ const SIFAT_OPTIONS = [
 ];
 
 export default function SuratMasukCreateScreen() {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
+
   const navigation = useNavigation();
 
   // Form states
@@ -62,6 +69,9 @@ export default function SuratMasukCreateScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // Draft states
+  const [hasDraft, setHasDraft] = useState(false);
+
   // Default dates helper
   useEffect(() => {
     const todayStr = new Date().toISOString().split('T')[0];
@@ -78,8 +88,88 @@ export default function SuratMasukCreateScreen() {
       }
     };
 
+    // Check for existing draft
+    const checkDraft = async () => {
+      try {
+        const draftJson = await AsyncStorage.getItem(DRAFT_KEY);
+        if (draftJson) {
+          setHasDraft(true);
+        }
+      } catch (e) {
+        console.error('[Draft] Gagal memeriksa draf:', e);
+      }
+    };
+
     fetchUnitKerja();
+    checkDraft();
   }, []);
+
+  // Restore draft from AsyncStorage
+  const handleRestoreDraft = async () => {
+    try {
+      const draftJson = await AsyncStorage.getItem(DRAFT_KEY);
+      if (draftJson) {
+        const draft = JSON.parse(draftJson);
+        if (draft.nomorSurat) setNomorSurat(draft.nomorSurat);
+        if (draft.pengirim) setPengirim(draft.pengirim);
+        if (draft.perihal) setPerihal(draft.perihal);
+        if (draft.tanggalSurat) setTanggalSurat(draft.tanggalSurat);
+        if (draft.tanggalTerima) setTanggalTerima(draft.tanggalTerima);
+        if (draft.sifat) setSifat(draft.sifat);
+        if (draft.ringkasan) setRingkasan(draft.ringkasan);
+        if (draft.unitKerjaId !== null && draft.unitKerjaId !== undefined) {
+          setUnitKerjaId(draft.unitKerjaId);
+          setSelectedUnitName(draft.selectedUnitName || 'Pilih Unit Kerja');
+        }
+        setHasDraft(false);
+        Alert.alert('Dipulihkan', 'Draf berhasil dipulihkan.');
+      }
+    } catch (e) {
+      console.error('[Draft] Gagal memulihkan draf:', e);
+    }
+  };
+
+  // Dismiss draft banner
+  const handleDismissDraft = async () => {
+    try {
+      await AsyncStorage.removeItem(DRAFT_KEY);
+      setHasDraft(false);
+    } catch (e) {
+      console.error('[Draft] Gagal menghapus draf:', e);
+    }
+  };
+
+  // Save current form as draft
+  const handleSaveDraft = async () => {
+    try {
+      const draftData = {
+        nomorSurat,
+        pengirim,
+        perihal,
+        tanggalSurat,
+        tanggalTerima,
+        sifat,
+        ringkasan,
+        unitKerjaId,
+        selectedUnitName,
+      };
+      await AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(draftData));
+      setHasDraft(false);
+      Alert.alert('Tersimpan', 'Draf surat masuk berhasil disimpan.');
+    } catch (e) {
+      console.error('[Draft] Gagal menyimpan draf:', e);
+      Alert.alert('Error', 'Gagal menyimpan draf.');
+    }
+  };
+
+  // Clear draft after successful submit
+  const clearDraft = async () => {
+    try {
+      await AsyncStorage.removeItem(DRAFT_KEY);
+    } catch (e) {
+      console.error('[Draft] Gagal menghapus draf:', e);
+    }
+  };
 
   // Pick PDF/Document
   const handlePickDocument = async () => {
@@ -120,6 +210,31 @@ export default function SuratMasukCreateScreen() {
           setFile({
             uri: asset.uri || '',
             name: asset.fileName || 'image.jpg',
+            type: asset.type || 'image/jpeg',
+          });
+          setErrorMsg('');
+        }
+      }
+    );
+  };
+
+  // Take Photo with Camera
+  const handleTakePhoto = () => {
+    launchCamera(
+      {
+        mediaType: 'photo',
+        quality: 0.8,
+      },
+      (response) => {
+        if (response.didCancel) {
+          console.log('[Camera] User cancelled');
+        } else if (response.errorCode) {
+          console.error('[Camera] Error:', response.errorMessage);
+        } else if (response.assets && response.assets.length > 0) {
+          const asset = response.assets[0];
+          setFile({
+            uri: asset.uri || '',
+            name: asset.fileName || 'photo.jpg',
             type: asset.type || 'image/jpeg',
           });
           setErrorMsg('');
@@ -169,6 +284,9 @@ export default function SuratMasukCreateScreen() {
         },
       });
 
+      // Clear draft on success
+      await clearDraft();
+
       Alert.alert('Sukses', 'Surat masuk berhasil ditambahkan.', [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);
@@ -183,7 +301,7 @@ export default function SuratMasukCreateScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
       
       {/* Header */}
       <View style={styles.header}>
@@ -199,6 +317,27 @@ export default function SuratMasukCreateScreen() {
         style={styles.keyboardView}
       >
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          {/* Draft Restore Banner */}
+          {hasDraft && (
+            <View style={styles.draftBanner}>
+              <Text style={styles.draftBannerIcon}>💾</Text>
+              <View style={styles.draftBannerContent}>
+                <Text style={styles.draftBannerTitle}>Draf Tersedia</Text>
+                <Text style={styles.draftBannerText}>
+                  Ada draf surat masuk yang belum dikirim. Pulihkan atau hapus?
+                </Text>
+              </View>
+              <View style={styles.draftBannerActions}>
+                <TouchableOpacity style={styles.draftRestoreBtn} onPress={handleRestoreDraft}>
+                  <Text style={styles.draftRestoreText}>Pulihkan</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.draftDismissBtn} onPress={handleDismissDraft}>
+                  <Text style={styles.draftDismissText}>Hapus</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
           {errorMsg ? (
             <View style={styles.errorContainer}>
               <Text style={styles.errorText}>{errorMsg}</Text>
@@ -213,7 +352,7 @@ export default function SuratMasukCreateScreen() {
               <TextInput
                 style={styles.inputField}
                 placeholder="Contoh: 015/UKI-RSU/IV/2026"
-                placeholderTextColor={COLORS.textMuted}
+                placeholderTextColor={colors.textMuted}
                 value={nomorSurat}
                 onChangeText={setNomorSurat}
               />
@@ -225,7 +364,7 @@ export default function SuratMasukCreateScreen() {
               <TextInput
                 style={styles.inputField}
                 placeholder="Contoh: Kemenkes RI"
-                placeholderTextColor={COLORS.textMuted}
+                placeholderTextColor={colors.textMuted}
                 value={pengirim}
                 onChangeText={setPengirim}
               />
@@ -237,7 +376,7 @@ export default function SuratMasukCreateScreen() {
               <TextInput
                 style={styles.inputField}
                 placeholder="Contoh: Undangan Rapat Koordinasi Medis"
-                placeholderTextColor={COLORS.textMuted}
+                placeholderTextColor={colors.textMuted}
                 value={perihal}
                 onChangeText={setPerihal}
               />
@@ -249,7 +388,7 @@ export default function SuratMasukCreateScreen() {
               <TextInput
                 style={styles.inputField}
                 placeholder="YYYY-MM-DD"
-                placeholderTextColor={COLORS.textMuted}
+                placeholderTextColor={colors.textMuted}
                 value={tanggalSurat}
                 onChangeText={setTanggalSurat}
               />
@@ -261,7 +400,7 @@ export default function SuratMasukCreateScreen() {
               <TextInput
                 style={styles.inputField}
                 placeholder="YYYY-MM-DD"
-                placeholderTextColor={COLORS.textMuted}
+                placeholderTextColor={colors.textMuted}
                 value={tanggalTerima}
                 onChangeText={setTanggalTerima}
               />
@@ -279,8 +418,8 @@ export default function SuratMasukCreateScreen() {
                       style={[
                         styles.sifatOptButton,
                         isSelected && styles.sifatOptButtonActive,
-                        isSelected && opt.value === 'segera' && { backgroundColor: '#fee2e2', borderColor: COLORS.danger },
-                        isSelected && opt.value === 'penting' && { backgroundColor: '#fef3c7', borderColor: COLORS.warningDark },
+                        isSelected && opt.value === 'segera' && { backgroundColor: '#fee2e2', borderColor: colors.danger },
+                        isSelected && opt.value === 'penting' && { backgroundColor: '#fef3c7', borderColor: colors.warningDark },
                         isSelected && opt.value === 'rahasia' && { backgroundColor: '#f3e8ff', borderColor: '#7c3aed' },
                       ]}
                       onPress={() => setSifat(opt.value)}
@@ -289,8 +428,8 @@ export default function SuratMasukCreateScreen() {
                         style={[
                           styles.sifatOptText,
                           isSelected && styles.sifatOptTextActive,
-                          isSelected && opt.value === 'segera' && { color: COLORS.danger },
-                          isSelected && opt.value === 'penting' && { color: COLORS.warningDark },
+                          isSelected && opt.value === 'segera' && { color: colors.danger },
+                          isSelected && opt.value === 'penting' && { color: colors.warningDark },
                           isSelected && opt.value === 'rahasia' && { color: '#7c3aed' },
                         ]}
                       >
@@ -322,7 +461,7 @@ export default function SuratMasukCreateScreen() {
               <TextInput
                 style={[styles.inputField, styles.textArea]}
                 placeholder="Masukkan ringkasan singkat isi surat (opsional)"
-                placeholderTextColor={COLORS.textMuted}
+                placeholderTextColor={colors.textMuted}
                 multiline
                 numberOfLines={3}
                 value={ringkasan}
@@ -335,10 +474,13 @@ export default function SuratMasukCreateScreen() {
               <Text style={styles.inputLabel}>File Lampiran Scan (Gambar/PDF)</Text>
               <View style={styles.attachmentButtonRow}>
                 <TouchableOpacity style={styles.fileButton} onPress={handlePickDocument}>
-                  <Text style={styles.fileButtonText}>📁 Pilih PDF/Gambar</Text>
+                  <Text style={styles.fileButtonText}>📁 PDF/Gambar</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.fileButton} onPress={handlePickImage}>
-                  <Text style={styles.fileButtonText}>📸 Pilih dari Galeri</Text>
+                  <Text style={styles.fileButtonText}>📸 Galeri</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.fileButton} onPress={handleTakePhoto}>
+                  <Text style={styles.fileButtonText}>📷 Kamera</Text>
                 </TouchableOpacity>
               </View>
 
@@ -364,10 +506,19 @@ export default function SuratMasukCreateScreen() {
             activeOpacity={0.8}
           >
             {isSubmitting ? (
-              <ActivityIndicator size="small" color={COLORS.white} />
+              <ActivityIndicator size="small" color={colors.white} />
             ) : (
               <Text style={styles.saveButtonText}>Simpan Surat</Text>
             )}
+          </TouchableOpacity>
+
+          {/* Save Draft Button */}
+          <TouchableOpacity
+            style={styles.draftButton}
+            onPress={handleSaveDraft}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.draftButtonText}>💾 Simpan Draf</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -400,7 +551,7 @@ export default function SuratMasukCreateScreen() {
                     setShowUnitModal(false);
                   }}
                 >
-                  <Text style={[styles.unitItemText, item.id === 0 && { color: COLORS.danger, fontWeight: '700' }]}>
+                  <Text style={[styles.unitItemText, item.id === 0 && { color: colors.danger, fontWeight: '700' }]}>
                     {item.nama}
                   </Text>
                 </TouchableOpacity>
@@ -414,20 +565,20 @@ export default function SuratMasukCreateScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: ThemeColors) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   keyboardView: {
     flex: 1,
   },
   header: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     paddingVertical: SPACING.md,
     paddingHorizontal: SPACING.xl,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -439,13 +590,13 @@ const styles = StyleSheet.create({
   },
   backArrow: {
     fontSize: 24,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '700',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.primary,
+    color: colors.primary,
     flex: 1,
     textAlign: 'center',
   },
@@ -467,7 +618,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   formCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderRadius: SIZES.radiusLg,
     padding: SPACING.xl,
     ...SHADOWS.sm,
@@ -478,18 +629,18 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: SPACING.xs,
   },
   inputField: {
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     borderRadius: SIZES.radiusSm,
     paddingHorizontal: SPACING.md,
     paddingVertical: Platform.OS === 'ios' ? SPACING.md : 8,
     fontSize: 13,
-    color: COLORS.text,
+    color: colors.text,
   },
   textArea: {
     textAlignVertical: 'top',
@@ -502,48 +653,48 @@ const styles = StyleSheet.create({
   },
   sifatOptButton: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     borderRadius: SIZES.radiusSm,
     paddingVertical: SPACING.sm,
     alignItems: 'center',
   },
   sifatOptButtonActive: {
     backgroundColor: 'rgba(37, 87, 167, 0.1)',
-    borderColor: COLORS.primary,
+    borderColor: colors.primary,
   },
   sifatOptText: {
     fontSize: 11,
     fontWeight: '600',
-    color: COLORS.textMuted,
+    color: colors.textMuted,
   },
   sifatOptTextActive: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '700',
   },
   pickerTrigger: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     borderRadius: SIZES.radiusSm,
     paddingHorizontal: SPACING.md,
     paddingVertical: Platform.OS === 'ios' ? SPACING.md : 10,
   },
   pickerTriggerText: {
     fontSize: 13,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
   },
   pickerTriggerTextActive: {
-    color: COLORS.text,
+    color: colors.text,
     fontWeight: '600',
   },
   pickerArrow: {
     fontSize: 10,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
   },
   attachmentButtonRow: {
     flexDirection: 'row',
@@ -551,10 +702,10 @@ const styles = StyleSheet.create({
   },
   fileButton: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
     borderWidth: 1,
     borderStyle: 'dashed',
-    borderColor: COLORS.textMuted,
+    borderColor: colors.textMuted,
     borderRadius: SIZES.radiusSm,
     paddingVertical: SPACING.md,
     alignItems: 'center',
@@ -562,13 +713,13 @@ const styles = StyleSheet.create({
   fileButtonText: {
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.text,
+    color: colors.text,
   },
   selectedFileBox: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(37, 87, 167, 0.05)',
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     borderWidth: 1,
     borderRadius: SIZES.radiusSm,
     paddingHorizontal: SPACING.md,
@@ -583,18 +734,18 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.text,
+    color: colors.text,
   },
   removeFile: {
     padding: SPACING.xs,
   },
   removeFileText: {
     fontSize: 20,
-    color: COLORS.danger,
+    color: colors.danger,
     fontWeight: '700',
   },
   saveButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     borderRadius: SIZES.radiusSm,
     paddingVertical: SPACING.md,
     alignItems: 'center',
@@ -602,17 +753,90 @@ const styles = StyleSheet.create({
     ...SHADOWS.sm,
   },
   saveButtonText: {
-    color: COLORS.white,
+    color: colors.white,
     fontSize: 16,
     fontWeight: '700',
   },
+  draftButton: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: SIZES.radiusSm,
+    paddingVertical: SPACING.md,
+    alignItems: 'center',
+    marginTop: SPACING.sm,
+  },
+  draftButtonText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  draftBanner: {
+    backgroundColor: '#fffbeb',
+    borderWidth: 1,
+    borderColor: '#fcd34d',
+    borderRadius: SIZES.radiusSm,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
+  draftBannerIcon: {
+    fontSize: 22,
+    marginRight: SPACING.sm,
+  },
+  draftBannerContent: {
+    flex: 1,
+    minWidth: 150,
+  },
+  draftBannerTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#92400e',
+    marginBottom: 2,
+  },
+  draftBannerText: {
+    fontSize: 11,
+    color: '#a16207',
+    lineHeight: 15,
+  },
+  draftBannerActions: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+    marginTop: SPACING.sm,
+  },
+  draftRestoreBtn: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: 6,
+    borderRadius: SIZES.radiusSm,
+  },
+  draftRestoreText: {
+    color: colors.white,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  draftDismissBtn: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: 6,
+    borderRadius: SIZES.radiusSm,
+  },
+  draftDismissText: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '600',
+  },
   modalOverlay: {
     flex: 1,
-    backgroundColor: COLORS.overlay,
+    backgroundColor: colors.overlay,
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderTopLeftRadius: SIZES.radiusLg,
     borderTopRightRadius: SIZES.radiusLg,
     maxHeight: '60%',
@@ -624,16 +848,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: SPACING.xl,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
   },
   modalTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: COLORS.primary,
+    color: colors.primary,
   },
   modalClose: {
     fontSize: 14,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     fontWeight: '600',
   },
   unitItem: {
@@ -642,11 +866,11 @@ const styles = StyleSheet.create({
   },
   unitItemText: {
     fontSize: 14,
-    color: COLORS.text,
+    color: colors.text,
     fontWeight: '500',
   },
   unitSeparator: {
     height: 1,
-    backgroundColor: COLORS.border,
+    backgroundColor: colors.border,
   },
 });

@@ -13,9 +13,13 @@ import {
   FlatList,
   Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { apiClient } from '../api/client';
-import { COLORS, SPACING, SIZES, SHADOWS } from '../theme/theme';
+import { SPACING, SIZES, SHADOWS, ThemeColors } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
+
+const DRAFT_KEY = '@draft_disposisi';
 
 interface UserItem {
   id: number;
@@ -32,6 +36,9 @@ interface SuratItem {
 }
 
 export default function DisposisiCreateScreen() {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
+
   const route = useRoute<any>();
   const navigation = useNavigation();
   const paramSuratId = route.params?.surat_masuk_id;
@@ -57,6 +64,9 @@ export default function DisposisiCreateScreen() {
   // Search states inside modals
   const [suratSearch, setSuratSearch] = useState('');
   const [userSearch, setUserSearch] = useState('');
+
+  // Draft states
+  const [hasDraft, setHasDraft] = useState(false);
 
   // Calendar states
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
@@ -88,8 +98,76 @@ export default function DisposisiCreateScreen() {
       }
     };
 
+    // Check for existing draft
+    const checkDraft = async () => {
+      try {
+        const draftJson = await AsyncStorage.getItem(DRAFT_KEY);
+        if (draftJson) {
+          setHasDraft(true);
+        }
+      } catch (e) {
+        console.error('[Draft] Gagal memeriksa draf:', e);
+      }
+    };
+
     loadInitialData();
+    checkDraft();
   }, [paramSuratId]);
+
+  // Restore draft
+  const handleRestoreDraft = async () => {
+    try {
+      const draftJson = await AsyncStorage.getItem(DRAFT_KEY);
+      if (draftJson) {
+        const draft = JSON.parse(draftJson);
+        if (draft.isiDisposisi) setIsiDisposisi(draft.isiDisposisi);
+        if (draft.tanggalDeadline) setTanggalDeadline(draft.tanggalDeadline);
+        if (draft.selectedPenerima && draft.selectedPenerima.length > 0) {
+          setSelectedPenerima(draft.selectedPenerima);
+        }
+        setHasDraft(false);
+        Alert.alert('Dipulihkan', 'Draf berhasil dipulihkan.');
+      }
+    } catch (e) {
+      console.error('[Draft] Gagal memulihkan draf:', e);
+    }
+  };
+
+  // Dismiss draft
+  const handleDismissDraft = async () => {
+    try {
+      await AsyncStorage.removeItem(DRAFT_KEY);
+      setHasDraft(false);
+    } catch (e) {
+      console.error('[Draft] Gagal menghapus draf:', e);
+    }
+  };
+
+  // Save draft
+  const handleSaveDraft = async () => {
+    try {
+      const draftData = {
+        isiDisposisi,
+        selectedPenerima,
+        tanggalDeadline,
+      };
+      await AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(draftData));
+      setHasDraft(false);
+      Alert.alert('Tersimpan', 'Draf disposisi berhasil disimpan.');
+    } catch (e) {
+      console.error('[Draft] Gagal menyimpan draf:', e);
+      Alert.alert('Error', 'Gagal menyimpan draf.');
+    }
+  };
+
+  // Clear draft
+  const clearDraft = async () => {
+    try {
+      await AsyncStorage.removeItem(DRAFT_KEY);
+    } catch (e) {
+      console.error('[Draft] Gagal menghapus draf:', e);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!selectedSurat) {
@@ -115,6 +193,10 @@ export default function DisposisiCreateScreen() {
       };
 
       await apiClient.post('/disposisi', payload);
+
+      // Clear draft on success
+      await clearDraft();
+
       Alert.alert('Sukses', 'Disposisi berhasil dikirim.');
       navigation.goBack();
     } catch (error: any) {
@@ -238,14 +320,14 @@ export default function DisposisiCreateScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
 
       {/* Header */}
       <View style={styles.header}>
@@ -257,6 +339,27 @@ export default function DisposisiCreateScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        {/* Draft Restore Banner */}
+        {hasDraft && (
+          <View style={styles.draftBanner}>
+            <Text style={styles.draftBannerIcon}>💾</Text>
+            <View style={styles.draftBannerContent}>
+              <Text style={styles.draftBannerTitle}>Draf Tersedia</Text>
+              <Text style={styles.draftBannerText}>
+                Ada draf disposisi yang belum dikirim. Pulihkan atau hapus?
+              </Text>
+            </View>
+            <View style={styles.draftBannerActions}>
+              <TouchableOpacity style={styles.draftRestoreBtn} onPress={handleRestoreDraft}>
+                <Text style={styles.draftRestoreText}>Pulihkan</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.draftDismissBtn} onPress={handleDismissDraft}>
+                <Text style={styles.draftDismissText}>Hapus</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
         {/* Surat Masuk Picker */}
         <View style={styles.formGroup}>
           <Text style={styles.label}>Surat Masuk Rujukan</Text>
@@ -308,7 +411,7 @@ export default function DisposisiCreateScreen() {
             multiline
             numberOfLines={4}
             placeholder="Masukkan isi disposisi atau instruksi..."
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor={colors.textMuted}
             value={isiDisposisi}
             onChangeText={setIsiDisposisi}
             textAlignVertical="top"
@@ -336,10 +439,19 @@ export default function DisposisiCreateScreen() {
           disabled={submitting}
         >
           {submitting ? (
-            <ActivityIndicator size="small" color={COLORS.white} />
+            <ActivityIndicator size="small" color={colors.white} />
           ) : (
             <Text style={styles.submitButtonText}>Kirim Disposisi 🚀</Text>
           )}
+        </TouchableOpacity>
+
+        {/* Save Draft Button */}
+        <TouchableOpacity
+          style={styles.draftButton}
+          onPress={handleSaveDraft}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.draftButtonText}>💾 Simpan Draf</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -357,7 +469,7 @@ export default function DisposisiCreateScreen() {
             <TextInput
               style={styles.modalSearchInput}
               placeholder="Cari surat..."
-              placeholderTextColor={COLORS.textMuted}
+              placeholderTextColor={colors.textMuted}
               value={suratSearch}
               onChangeText={setSuratSearch}
             />
@@ -399,7 +511,7 @@ export default function DisposisiCreateScreen() {
             <TextInput
               style={styles.modalSearchInput}
               placeholder="Cari nama staf..."
-              placeholderTextColor={COLORS.textMuted}
+              placeholderTextColor={colors.textMuted}
               value={userSearch}
               onChangeText={setUserSearch}
             />
@@ -450,23 +562,23 @@ export default function DisposisiCreateScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   header: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     paddingVertical: SPACING.md,
     paddingHorizontal: SPACING.xl,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -478,13 +590,13 @@ const styles = StyleSheet.create({
   },
   backArrow: {
     fontSize: 24,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '700',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.primary,
+    color: colors.primary,
     flex: 1,
     textAlign: 'center',
   },
@@ -497,16 +609,16 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '700',
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: SPACING.xs,
   },
   pickerTrigger: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     borderRadius: SIZES.radiusSm,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.md,
@@ -514,20 +626,20 @@ const styles = StyleSheet.create({
   },
   pickerTriggerText: {
     fontSize: 14,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     flex: 1,
     paddingRight: SPACING.sm,
   },
   pickerTriggerTextActive: {
-    color: COLORS.text,
+    color: colors.text,
     fontWeight: '600',
   },
   pickerArrow: {
     fontSize: 12,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
   },
   readOnlyInput: {
-    backgroundColor: COLORS.border,
+    backgroundColor: colors.border,
     borderRadius: SIZES.radiusSm,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.md,
@@ -535,27 +647,27 @@ const styles = StyleSheet.create({
   readOnlyTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.text,
+    color: colors.text,
   },
   readOnlySubtitle: {
     fontSize: 12,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     marginTop: 2,
   },
   textArea: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     borderRadius: SIZES.radiusSm,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.md,
     fontSize: 14,
-    color: COLORS.text,
+    color: colors.text,
     minHeight: 100,
     ...SHADOWS.sm,
   },
   submitButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     borderRadius: SIZES.radiusSm,
     paddingVertical: SPACING.md,
     alignItems: 'center',
@@ -565,9 +677,84 @@ const styles = StyleSheet.create({
     ...SHADOWS.sm,
   },
   submitButtonText: {
-    color: COLORS.white,
+    color: colors.white,
     fontSize: 15,
     fontWeight: '700',
+  },
+  draftButton: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: SIZES.radiusSm,
+    paddingVertical: SPACING.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: SPACING.sm,
+    marginBottom: SPACING.xxl,
+  },
+  draftButtonText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  draftBanner: {
+    backgroundColor: '#fffbeb',
+    borderWidth: 1,
+    borderColor: '#fcd34d',
+    borderRadius: SIZES.radiusSm,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
+  draftBannerIcon: {
+    fontSize: 22,
+    marginRight: SPACING.sm,
+  },
+  draftBannerContent: {
+    flex: 1,
+    minWidth: 150,
+  },
+  draftBannerTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#92400e',
+    marginBottom: 2,
+  },
+  draftBannerText: {
+    fontSize: 11,
+    color: '#a16207',
+    lineHeight: 15,
+  },
+  draftBannerActions: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+    marginTop: SPACING.sm,
+  },
+  draftRestoreBtn: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: 6,
+    borderRadius: SIZES.radiusSm,
+  },
+  draftRestoreText: {
+    color: colors.white,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  draftDismissBtn: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: 6,
+    borderRadius: SIZES.radiusSm,
+  },
+  draftDismissText: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '600',
   },
   // Modal layout
   modalOverlay: {
@@ -576,7 +763,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderTopLeftRadius: SIZES.radiusLg,
     borderTopRightRadius: SIZES.radiusLg,
     maxHeight: '80%',
@@ -589,33 +776,33 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
     paddingBottom: SPACING.sm,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
   },
   modalTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.primary,
+    color: colors.primary,
   },
   closeModalText: {
-    color: COLORS.primaryLight,
+    color: colors.primaryLight,
     fontWeight: '700',
     fontSize: 14,
   },
   modalSearchInput: {
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     borderRadius: SIZES.radiusSm,
     paddingHorizontal: SPACING.md,
     paddingVertical: 8,
     fontSize: 13,
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: SPACING.md,
   },
   listItem: {
     paddingVertical: SPACING.md,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -626,14 +813,14 @@ const styles = StyleSheet.create({
   listItemTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.text,
+    color: colors.text,
   },
   listItemCheckedText: {
-    color: COLORS.primary,
+    color: colors.primary,
   },
   listItemSubtitle: {
     fontSize: 12,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     marginTop: 2,
   },
   userListItemContent: {
@@ -645,7 +832,7 @@ const styles = StyleSheet.create({
   },
   emptyModalText: {
     textAlign: 'center',
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     paddingVertical: SPACING.xl,
     fontStyle: 'italic',
   },
@@ -662,11 +849,11 @@ const styles = StyleSheet.create({
   calendarTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.text,
+    color: colors.text,
   },
   calendarNavText: {
     fontSize: 16,
-    color: COLORS.primary,
+    color: colors.primary,
     paddingHorizontal: SPACING.md,
   },
   calendarWeekdays: {
@@ -679,7 +866,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.textMuted,
+    color: colors.textMuted,
   },
   calendarGrid: {
     flexDirection: 'row',
@@ -698,15 +885,15 @@ const styles = StyleSheet.create({
     height: 36,
   },
   calendarDaySelected: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
   },
   calendarDayText: {
     fontSize: 13,
-    color: COLORS.text,
+    color: colors.text,
     fontWeight: '500',
   },
   calendarDayTextSelected: {
-    color: COLORS.white,
+    color: colors.white,
     fontWeight: '700',
   },
 });

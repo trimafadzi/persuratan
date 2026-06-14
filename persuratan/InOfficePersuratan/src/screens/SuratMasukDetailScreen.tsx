@@ -13,7 +13,8 @@ import {
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { apiClient } from '../api/client';
-import { COLORS, SPACING, SIZES, SHADOWS } from '../theme/theme';
+import { SPACING, SIZES, SHADOWS, ThemeColors } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
 
 interface DisposisiItem {
   id: number;
@@ -47,6 +48,9 @@ interface SuratMasukDetail {
 }
 
 export default function SuratMasukDetailScreen() {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
+
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
   const suratId = route.params?.id;
@@ -117,10 +121,10 @@ export default function SuratMasukDetailScreen() {
 
   const getSifatTextColor = (sifat: string) => {
     switch (sifat) {
-      case 'segera': return COLORS.danger;
-      case 'penting': return COLORS.warningDark;
+      case 'segera': return colors.danger;
+      case 'penting': return colors.warningDark;
       case 'rahasia': return '#7c3aed';
-      default: return COLORS.textMuted;
+      default: return colors.textMuted;
     }
   };
 
@@ -136,18 +140,18 @@ export default function SuratMasukDetailScreen() {
 
   const getStatusTextColor = (color: string) => {
     switch (color) {
-      case 'danger': return COLORS.danger;
-      case 'warning': return COLORS.warningDark;
-      case 'info': return COLORS.primaryLight;
-      case 'success': return COLORS.successLight;
-      default: return COLORS.textMuted;
+      case 'danger': return colors.danger;
+      case 'warning': return colors.warningDark;
+      case 'info': return colors.primaryLight;
+      case 'success': return colors.successLight;
+      default: return colors.textMuted;
     }
   };
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -167,7 +171,7 @@ export default function SuratMasukDetailScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
       
       {/* Header */}
       <View style={styles.header}>
@@ -260,7 +264,7 @@ export default function SuratMasukDetailScreen() {
             activeOpacity={0.8}
           >
             {updatingStatus ? (
-              <ActivityIndicator size="small" color={COLORS.white} />
+              <ActivityIndicator size="small" color={colors.white} />
             ) : (
               <Text style={styles.actionButtonText}>Tandai Sudah Dibaca</Text>
             )}
@@ -269,7 +273,7 @@ export default function SuratMasukDetailScreen() {
 
         {/* Buat Disposisi Action Button */}
         <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: COLORS.accent, marginTop: 0 }]}
+          style={[styles.actionButton, { backgroundColor: colors.accent, marginTop: 0 }]}
           onPress={() => navigation.navigate('DisposisiTab', {
             screen: 'DisposisiCreate',
             params: { surat_masuk_id: surat.id }
@@ -335,14 +339,14 @@ export default function SuratMasukDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -353,28 +357,28 @@ const styles = StyleSheet.create({
     padding: SPACING.xl,
   },
   errorText: {
-    color: COLORS.danger,
+    color: colors.danger,
     fontSize: 16,
     fontWeight: '600',
     marginBottom: SPACING.md,
     textAlign: 'center',
   },
   backButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     paddingHorizontal: SPACING.xl,
     paddingVertical: SPACING.md,
     borderRadius: SIZES.radiusSm,
   },
   backButtonText: {
-    color: COLORS.white,
+    color: colors.white,
     fontWeight: '700',
   },
   header: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     paddingVertical: SPACING.md,
     paddingHorizontal: SPACING.xl,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -386,13 +390,13 @@ const styles = StyleSheet.create({
   },
   backArrow: {
     fontSize: 24,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '700',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.primary,
+    color: colors.primary,
     flex: 1,
     textAlign: 'center',
   },
@@ -400,7 +404,7 @@ const styles = StyleSheet.create({
     padding: SPACING.xl,
   },
   detailsCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderRadius: SIZES.radiusLg,
     padding: SPACING.xl,
     ...SHADOWS.sm,
@@ -424,18 +428,18 @@ const styles = StyleSheet.create({
   perihalText: {
     fontSize: 18,
     fontWeight: '800',
-    color: COLORS.text,
+    color: colors.text,
     lineHeight: 24,
     marginBottom: SPACING.xs,
   },
   nomorText: {
     fontSize: 12,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     fontWeight: '500',
   },
   divider: {
     height: 1,
-    backgroundColor: COLORS.border,
+    backgroundColor: colors.border,
     marginVertical: SPACING.md,
   },
   infoRow: {
@@ -445,12 +449,12 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 13,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     fontWeight: '500',
   },
   infoValue: {
     fontSize: 13,
-    color: COLORS.text,
+    color: colors.text,
     fontWeight: '600',
     flex: 1,
     textAlign: 'right',
@@ -458,23 +462,23 @@ const styles = StyleSheet.create({
   },
   ringkasanSection: {
     marginTop: SPACING.md,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
     padding: SPACING.md,
     borderRadius: SIZES.radiusSm,
   },
   ringkasanTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: COLORS.primary,
+    color: colors.primary,
     marginBottom: SPACING.xs,
   },
   ringkasanText: {
     fontSize: 13,
-    color: COLORS.text,
+    color: colors.text,
     lineHeight: 18,
   },
   attachmentCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderRadius: SIZES.radiusLg,
     padding: SPACING.xl,
     ...SHADOWS.sm,
@@ -483,7 +487,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: COLORS.primary,
+    color: colors.primary,
     marginBottom: SPACING.md,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -491,7 +495,7 @@ const styles = StyleSheet.create({
   attachmentBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
     borderRadius: SIZES.radiusSm,
     padding: SPACING.md,
   },
@@ -506,26 +510,26 @@ const styles = StyleSheet.create({
   attachmentName: {
     fontSize: 13,
     fontWeight: '700',
-    color: COLORS.text,
+    color: colors.text,
   },
   attachmentSize: {
     fontSize: 11,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     marginTop: 2,
   },
   openBtn: {
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: colors.primaryLight,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs,
     borderRadius: SIZES.radiusSm,
   },
   openBtnText: {
-    color: COLORS.white,
+    color: colors.white,
     fontWeight: '700',
     fontSize: 12,
   },
   actionButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     borderRadius: SIZES.radiusSm,
     paddingVertical: SPACING.md,
     alignItems: 'center',
@@ -533,12 +537,12 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   actionButtonText: {
-    color: COLORS.white,
+    color: colors.white,
     fontSize: 15,
     fontWeight: '700',
   },
   timelineSection: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderRadius: SIZES.radiusLg,
     padding: SPACING.xl,
     ...SHADOWS.sm,
@@ -549,7 +553,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyTimelineText: {
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     fontSize: 13,
   },
   timelineContainer: {
@@ -566,13 +570,13 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: colors.primaryLight,
     zIndex: 10,
   },
   timelineLine: {
     width: 2,
     flex: 1,
-    backgroundColor: COLORS.border,
+    backgroundColor: colors.border,
     marginVertical: 2,
   },
   timelineContent: {
@@ -588,35 +592,35 @@ const styles = StyleSheet.create({
   timelineSender: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.text,
+    color: colors.text,
   },
   timelineStatus: {
     fontSize: 10,
     fontWeight: '700',
-    color: COLORS.accent,
+    color: colors.accent,
     textTransform: 'uppercase',
   },
   timelineReceiver: {
     fontSize: 12,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     fontWeight: '500',
     marginTop: 2,
   },
   timelineInstruction: {
     fontSize: 13,
-    color: COLORS.text,
+    color: colors.text,
     marginTop: SPACING.xs,
     fontStyle: 'italic',
   },
   timelineDeadline: {
     fontSize: 11,
-    color: COLORS.danger,
+    color: colors.danger,
     fontWeight: '600',
     marginTop: SPACING.xs,
   },
   timelineTime: {
     fontSize: 10,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     marginTop: SPACING.xs,
   },
 });

@@ -1,10 +1,13 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, StatusBar, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, StatusBar, ScrollView, Switch } from 'react-native';
 import { useAuthStore } from '../store/authStore';
-import { COLORS, SPACING, SIZES, SHADOWS } from '../theme/theme';
+import { SPACING, SIZES, SHADOWS, ThemeColors } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function ProfilScreen() {
   const { user, logout } = useAuthStore();
+  const { colors, isDark, toggleTheme } = useTheme();
+  const styles = getStyles(colors);
 
   const handleLogout = async () => {
     await logout();
@@ -12,7 +15,7 @@ export default function ProfilScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.white} />
       
       {/* Header */}
       <View style={styles.header}>
@@ -51,6 +54,20 @@ export default function ProfilScreen() {
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Unit Kerja</Text>
             <Text style={styles.detailValue}>{user?.unit_kerja?.nama || '-'}</Text>
+          </View>
+        </View>
+
+        {/* Appearance Section */}
+        <View style={styles.detailsSection}>
+          <Text style={styles.sectionTitle}>Tampilan</Text>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Mode Gelap</Text>
+            <Switch
+              value={isDark}
+              onValueChange={toggleTheme}
+              trackColor={{ false: colors.border, true: colors.primaryLight }}
+              thumbColor={isDark ? colors.primary : '#f4f3f4'}
+            />
           </View>
         </View>
 
@@ -95,29 +112,29 @@ export default function ProfilScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   header: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     paddingVertical: SPACING.md,
     paddingHorizontal: SPACING.xl,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
     alignItems: 'center',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.primary,
+    color: colors.primary,
   },
   scrollContent: {
     padding: SPACING.xl,
   },
   card: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderRadius: SIZES.radiusLg,
     padding: SPACING.xl,
     alignItems: 'center',
@@ -128,31 +145,31 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: SPACING.md,
     borderWidth: 3,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
   },
   avatarText: {
     fontSize: 28,
     fontWeight: '700',
-    color: COLORS.white,
+    color: colors.white,
   },
   userName: {
     fontSize: 22,
     fontWeight: '800',
-    color: COLORS.text,
+    color: colors.text,
   },
   userRole: {
     fontSize: 14,
-    color: COLORS.accent,
+    color: colors.accent,
     fontWeight: '600',
     marginTop: 4,
   },
   detailsSection: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderRadius: SIZES.radiusLg,
     padding: SPACING.xl,
     ...SHADOWS.sm,
@@ -161,10 +178,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.primary,
+    color: colors.primary,
     marginBottom: SPACING.md,
     borderBottomWidth: 2,
-    borderBottomColor: COLORS.background,
+    borderBottomColor: colors.background,
     paddingBottom: SPACING.xs,
   },
   detailRow: {
@@ -172,23 +189,23 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: SPACING.sm,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.background,
+    borderBottomColor: colors.background,
   },
   detailLabel: {
     fontSize: 14,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     fontWeight: '500',
   },
   detailValue: {
     fontSize: 14,
-    color: COLORS.text,
+    color: colors.text,
     fontWeight: '600',
     textAlign: 'right',
     flex: 1,
     marginLeft: SPACING.md,
   },
   logoutButton: {
-    backgroundColor: COLORS.danger,
+    backgroundColor: colors.danger,
     borderRadius: SIZES.radiusMd,
     paddingVertical: SPACING.md,
     alignItems: 'center',
@@ -199,16 +216,16 @@ const styles = StyleSheet.create({
   logoutText: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.white,
+    color: colors.white,
   },
   detailRowColumn: {
     paddingVertical: SPACING.sm,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.background,
+    borderBottomColor: colors.background,
   },
   securityHelpText: {
     fontSize: 12,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     lineHeight: 18,
     marginTop: 4,
   },
