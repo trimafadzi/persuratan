@@ -1,13 +1,8 @@
-# Tugas Implementasi — Fase 3.6: Modul Disposisi (Mobile)
+# Tugas Implementasi — Fase 3.7 & 3.8: Notifikasi, Laporan, & Profil (Mobile)
 
-- `[x]` Setup stack navigator baru (`DisposisiNavigator.tsx`)
-- `[x]` Hubungkan `DisposisiNavigator` ke menu bottom tab (`MainTabNavigator.tsx`)
-- `[x]` Hapus screen placeholder lama (`DisposisiScreen.tsx`)
-- `[x]` Pembuatan Layar Daftar Disposisi (`DisposisiListScreen.tsx` — Tab Masuk/Keluar, Search, Filter Status, Pagination)
-- `[x]` Pembuatan Layar Detail Disposisi (`DisposisiDetailScreen.tsx` — Metadata Surat, Penerima/Pemberi Info, Riwayat Laporan, Aksi Kontekstual)
-- `[x]` Pembuatan Layar Formulir Pembuatan Disposisi (`DisposisiCreateScreen.tsx` — Multi-select Penerima, Surat Picker, Deadline)
-- `[x]` Pembuatan Layar Formulir Teruskan Disposisi (`DisposisiForwardScreen.tsx` — Multi-select Penerima, Deadline)
-- `[x]` Pembuatan Layar Formulir Pelaporan (`DisposisiLaporanScreen.tsx` — Text Input, Picker Dokumen/Foto, Multipart Post)
-- `[x]` Pembuatan Layar Formulir Tanggapan (`DisposisiTanggapanScreen.tsx` — Approved/Rejected, Catatan)
-- `[x]` Tambah Tombol "Buat Disposisi" di Detail Surat Masuk (`SuratMasukDetailScreen.tsx`)
+- `[x]` Setup root navigation routes (`Notifikasi` dan `Laporan`) di `AppNavigator.tsx`
+- `[x]` Integrasi unread notification count & Ikon Header di `DashboardScreen.tsx`
+- `[x]` Pembuatan Layar Notifikasi (`NotifikasiScreen.tsx` — List, Unread Dot, Read Post, Redirection logic)
+- `[x]` Pembuatan Layar Laporan Statistik (`LaporanScreen.tsx` — Stats, Segmented Tab, Pure-CSS monthly volume chart, Employee Performance Ranking list)
+- `[x]` Pembaruan halaman Profil (`ProfilScreen.tsx` — Ganti Password direction)
 - `[x]` Verifikasi static analysis (Type check & lint)

@@ -65,6 +65,25 @@ Kami telah sukses mengimplementasikan fitur Navigasi Tab, Layar Dashboard Dinami
 - [DisposisiTanggapanScreen.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/screens/DisposisiTanggapanScreen.tsx):
   - Persetujuan (Approve) atau penolakan (Reject) laporan bawahan beserta catatan evaluasi pimpinan.
 
+### 6. Modul Notifikasi (Fase 3.7)
+- [NotifikasiScreen.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/screens/NotifikasiScreen.tsx):
+  - Halaman daftar notifikasi dengan load data paginated, pull-to-refresh, status unread indicator.
+  - Aksi sentuh mengubah status baca ke API `PATCH /api/v1/notifikasi/{id}/read` dan langsung melakukan navigasi deep redirection ke halaman detail yang relevan (`DisposisiDetail`, `SuratMasukDetail`, atau `SuratKeluarDetail`) berdasarkan tipe data.
+- [DashboardScreen.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/screens/DashboardScreen.tsx) & [AppNavigator.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/navigation/AppNavigator.tsx):
+  - Integrasi badge count notifikasi dinamis pada ikon bel di header Dashboard.
+  - Pendaftaran route navigasi di level RootStack agar transisi pembukaan screen berjalan lancar dari mana saja.
+
+### 7. Modul Laporan & Statistik (Fase 3.8)
+- [LaporanScreen.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/screens/LaporanScreen.tsx):
+  - Layar pelaporan statistik view-only dengan dual tab/segmen: **Statistik Surat** dan **Kinerja Pegawai**.
+  - **Statistik Surat**: Menampilkan ringkasan volume surat masuk/keluar, progress-bar breakdown status surat masuk, dan grafik batang perbandingan 6 bulan terakhir menggunakan pure-CSS flexbox layout.
+  - **Kinerja Pegawai**: Menampilkan scoreboard pegawai berkinerja terbaik dengan detail total disposisi dikirim/diterima, rasio ketuntasan, dan indikator warna skor kinerja.
+
+### 8. Keamanan & Informasi Profil saya (Fase 3.8)
+- [ProfilScreen.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/screens/ProfilScreen.tsx):
+  - Menampilkan metadata detail akun secara komprehensif.
+  - Menambahkan security notice and instructions di kolom Keamanan untuk mengarahkan pengguna melakukan pengubahan sandi secara mandiri di Portal Web inOffice RSU UKI.
+
 ---
 
 ## Hasil Pengujian & Verifikasi
@@ -81,9 +100,9 @@ Eslint dijalankan untuk memastikan tidak ada error struktur coding atau unused i
 ```bash
 npm run lint
 ```
-**Hasil:** `Lulus (0 error / 43 style warnings)`
+**Hasil:** `Lulus (0 error / 45 style warnings)`
 
 ### 3. Kemajuan Proyek (planmobile.md)
 Kami telah memperbarui progress tracking pada [planmobile.md](file:///root/persuratan/persuratan/planmobile.md):
-- Tugas Fase 3.6: **✅ Selesai**
-- Progres keseluruhan proyek meningkat dari **61%** ke **68%** (`71/104` total task selesai).
+- Tugas Fase 3.7 & 3.8: **✅ Selesai**
+- Progres keseluruhan proyek meningkat dari **68%** ke **79%** (`82/104` total task selesai).

@@ -1,20 +1,28 @@
-# Rencana Implementasi — Fase 3.6: Modul Disposisi (Mobile)
+# Rencana Implementasi — Fase 3.9 & 3.10: Fitur Native Mobile & Skeleton Loading
 
-Implementasi lengkap modul Disposisi pada aplikasi mobile, termasuk navigasi stack khusus, daftar disposisi masuk & keluar dengan pencarian/filter, rincian disposisi dengan histori laporan, pembuatan disposisi baru (untuk surat masuk), penerusan disposisi (forward), pengiriman laporan pelaksanaan (dengan unggah berkas bukti), tanggapan atas laporan (approval/rejection), dan pembatalan disposisi.
+Implementasi peningkatan kegunaan aplikasi mobile (UX) dengan menambahkan fitur integrasi kamera untuk memotret/men-scan dokumen secara langsung, penyimpanan draf formulir secara offline (Offline Drafts), dan Shimmer Skeleton Loading modern sebagai pengganti indikator loading spinner standar.
 
 ## User Review Required
 
 > [!IMPORTANT]
-> **Integrasi Alur Disposisi:**
-> 1. Tab navigasi **Disposisi** akan memuat `DisposisiNavigator` yang mengarahkan ke daftar disposisi masuk/keluar pegawai yang sedang aktif.
-> 2. Tombol **Buat Disposisi** akan ditambahkan pada halaman [SuratMasukDetailScreen](file:///root/persuratan/persuratan/InOfficePersuratan/src/screens/SuratMasukDetailScreen.tsx) agar pimpinan dapat dengan mudah mendelegasikan surat masuk langsung setelah membacanya.
-> 3. Alur status disposisi (`pending` -> `selesai` / `diteruskan` / `dibatalkan`) disinkronkan secara real-time melalui API backend.
+> **Penyimpanan Draf Offline:**
+> Kami akan mengimplementasikan penyimpanan draf berbasis `AsyncStorage` untuk tiga formulir utama:
+> 1. Registrasi Surat Masuk
+> 2. Registrasi Surat Keluar
+> 3. Pembuatan Disposisi Baru
+> 
+> Saat halaman formulir dibuka, aplikasi akan mendeteksi draf yang tersimpan secara lokal dan menampilkan banner konfirmasi di atas form untuk memulihkan (*Restore*) atau menghapus (*Delete*) draf tersebut. Tombol **"Simpan Draf"** juga akan disematkan di barisan tombol aksi. Draf akan otomatis dihapus jika form berhasil terkirim ke server.
+>
+> **Shimmer Loader Tanpa Library Native Tambahan:**
+> Untuk menjaga stabilitas build Android/iOS, kami akan merancang komponen `SkeletonLoader` menggunakan animasi native `Animated` bawaan React Native. Komponen ini memiliki variasi layout untuk List, Dashboard, dan Grafik Statistik.
 
 ## Open Questions
 
 > [!NOTE]
-> 1. **Daftar Surat pada Pembuatan Disposisi:** Ketika membuat disposisi langsung dari modul Disposisi (bukan dari detail surat), apakah kita perlu menyediakan picker surat masuk? *Rekomendasi:* Ya, kami menyediakan modal picker berisi daftar surat masuk aktif (belum selesai) yang diambil dari server.
-> 2. **Unggah Bukti Laporan:** Laporan pelaksanaan disposisi mendukung lampiran bukti (PDF, Word, JPEG, PNG). Kita akan menggunakan `DocumentPicker` dan `ImagePicker` (galeri gambar) yang sudah terintegrasi di project. Apakah perlu mendukung jepretan kamera langsung? *Rekomendasi:* Menggunakan picker galeri gambar & dokumen sudah cukup memenuhi kebutuhan 75MB limit file upload.
+> 1. **Dukungan Multi-Attachment Kamera pada Kirim Laporan:**
+>    Untuk layar kirim laporan disposisi (`DisposisiLaporanScreen`), foto yang diambil menggunakan Kamera akan di-append ke daftar dokumen terpilih agar pengguna dapat mengunggah beberapa dokumen scan/foto secara bersamaan. Apakah alur multi-attachment kamera ini sudah sesuai? *Rekomendasi:* Ya, ini konsisten dengan fitur Galeri Foto.
+> 2. **Auto-save vs Manual Save Draft:**
+>    Apakah draf sebaiknya di-autosave setiap kali input berubah, atau cukup manual dengan menekan tombol "Simpan Draf"? *Rekomendasi:* Kombinasi tombol "Simpan Draf" manual adalah opsi paling terkontrol dan mencegah performa storage bottleneck di perangkat berspesifikasi rendah.
 
 ## Proposed Changes
 
@@ -22,94 +30,91 @@ Aktivitas pengerjaan difokuskan pada direktori `persuratan/InOfficePersuratan/sr
 
 ---
 
-### [Component 1] Navigasi & Integrasi Disposisi
+### [Component 1] Pembuatan Komponen Skeleton Shimmer
 
-#### [NEW] [DisposisiNavigator.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/navigation/DisposisiNavigator.tsx)
-Stack navigator khusus untuk alur Disposisi:
-- `DisposisiList` (Daftar disposisi masuk & keluar)
-- `DisposisiDetail` (Informasi rinci disposisi & tindakan terkait)
-- `DisposisiCreate` (Formulir pembuatan disposisi baru)
-- `DisposisiForward` (Formulir meneruskan disposisi)
-- `DisposisiLaporan` (Formulir pelaporan hasil pelaksanaan)
-- `DisposisiTanggapan` (Formulir persetujuan/penolakan laporan)
-
-#### [MODIFY] [MainTabNavigator.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/navigation/MainTabNavigator.tsx)
-Mengubah rujukan komponen `DisposisiTab` dari `DisposisiScreen` (placeholder) menjadi `DisposisiNavigator`.
-
-#### [DELETE] [DisposisiScreen.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/screens/DisposisiScreen.tsx)
-Menghapus file screen placeholder lama karena tugasnya digantikan oleh `DisposisiListScreen.tsx`.
+#### [NEW] [SkeletonLoader.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/components/SkeletonLoader.tsx)
+Membuat komponen visual skeleton shimmer modern:
+- Animasi looping opacity halus (0.3 <-> 0.7) menggunakan `Animated.loop`.
+- Layout komposit siap pakai:
+  - `CardListLoader`: Kerangka list item (untuk Surat Masuk/Keluar, Disposisi, dan Notifikasi).
+  - `DashboardLoader`: Kerangka stats grid, quick actions, dan recent items.
+  - `ChartLoader`: Kerangka mini stats dan bar chart laporan.
 
 ---
 
-### [Component 2] Tampilan Layar Utama Disposisi
+### [Component 2] Penerapan Skeleton Shimmer Loader pada List & Stats Screen
 
-#### [NEW] [DisposisiListScreen.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/screens/DisposisiListScreen.tsx)
-Menampilkan daftar disposisi dengan tabs:
-- **Disposisi Masuk**: Disposisi yang didelegasikan oleh orang lain kepada user yang login.
-- **Disposisi Keluar**: Disposisi yang didelegasikan oleh user yang login kepada bawahan/orang lain.
-Fitur:
-- Kolom pencarian isi instruksi disposisi.
-- Filter horizontal cepat berdasarkan status (`pending`, `diteruskan`, `selesai`, `dibatalkan`).
-- Menandai item belum dibaca (unread indicator) untuk disposisi masuk.
-- Pagination (*infinite scroll*).
+#### [MODIFY] [DashboardScreen.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/screens/DashboardScreen.tsx)
+- Impor `DashboardLoader` dari `../components/SkeletonLoader`.
+- Ganti spinner `<ActivityIndicator size="large" />` dengan `<DashboardLoader />` saat status `loading` bernilai true.
 
-#### [NEW] [DisposisiDetailScreen.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/screens/DisposisiDetailScreen.tsx)
-Menampilkan rincian disposisi:
-- Metadata surat masuk terkait (nomor, pengirim, perihal).
-- Nama pemberi disposisi & daftar penerima (beserta status is_read & tanggal dibaca).
-- Instruksi & tenggat waktu (deadline).
-- Riwayat laporan pelaksanaan (isi laporan, status tanggapan, file bukti).
-- Tombol aksi kontekstual:
-  - Penerima: **Teruskan** & **Kirim Laporan**.
-  - Pemberi: **Batalkan** (menghapus disposisi) & **Tanggapi Laporan** (jika ada laporan terkirim yang belum disetujui).
+#### [MODIFY] [SuratMasukListScreen.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/screens/SuratMasukListScreen.tsx)
+- Impor `CardListLoader`.
+- Tampilkan `<CardListLoader />` saat memuat data di awal (`loading && !refreshing`).
+
+#### [MODIFY] [SuratKeluarListScreen.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/screens/SuratKeluarListScreen.tsx)
+- Impor `CardListLoader`.
+- Tampilkan `<CardListLoader />` saat memuat data di awal.
+
+#### [MODIFY] [DisposisiListScreen.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/screens/DisposisiListScreen.tsx)
+- Impor `CardListLoader`.
+- Tampilkan `<CardListLoader />` saat memuat data di awal.
+
+#### [MODIFY] [NotifikasiScreen.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/screens/NotifikasiScreen.tsx)
+- Impor `CardListLoader`.
+- Tampilkan `<CardListLoader />` saat memuat data di awal.
+
+#### [MODIFY] [LaporanScreen.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/screens/LaporanScreen.tsx)
+- Impor `ChartLoader`.
+- Tampilkan `<ChartLoader />` saat data statistik utama sedang di-fetch.
 
 ---
 
-### [Component 3] Tampilan Formulir Aksi Disposisi
+### [Component 3] Integrasi Kamera Native & Penyimpanan Draf Offline
 
-#### [NEW] [DisposisiCreateScreen.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/screens/DisposisiCreateScreen.tsx)
-Formulir untuk membuat disposisi baru:
-- Surat Masuk picker (jika tidak dilewatkan dari halaman detail surat).
-- Penerima picker (mengambil data dari `/api/v1/users` dengan multi-select & pencarian nama).
-- Input isi instruksi disposisi.
-- Input tanggal tenggat waktu (deadline).
+#### [MODIFY] [SuratMasukCreateScreen.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/screens/SuratMasukCreateScreen.tsx)
+- Impor `launchCamera` dari `react-native-image-picker`.
+- Tambahkan aksi "Kamera" di bagian unggah berkas yang memanggil `launchCamera` untuk memotret surat fisik secara langsung.
+- Implementasi sistem draf:
+  - Simpan field (nomorSurat, pengirim, perihal, tanggalSurat, tanggalTerima, unitKerja, sifat) ke `@draft_surat_masuk` di `AsyncStorage`.
+  - Tampilkan banner konfirmasi pemulihan draf di bagian atas layar jika data terdeteksi.
+  - Tambahkan tombol "Simpan Draf" di sebelah tombol simpan utama.
+  - Bersihkan storage draf jika penyimpanan data berhasil.
 
-#### [NEW] [DisposisiForwardScreen.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/screens/DisposisiForwardScreen.tsx)
-Formulir untuk meneruskan disposisi yang diterima ke bawahan/pegawai lain. Memiliki input instruksi, multi-select penerima, dan deadline.
+#### [MODIFY] [SuratKeluarCreateScreen.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/screens/SuratKeluarCreateScreen.tsx)
+- Impor `launchCamera` dari `react-native-image-picker`.
+- Tambahkan tombol aksi "Kamera" untuk lampiran berkas surat keluar.
+- Implementasi sistem draf menggunakan key `@draft_surat_keluar` untuk menyimpan `penerima`, `perihal`, `sifat`, dan `isi`.
+- Menampilkan banner pemulihan draf dan tombol "Simpan Draf".
+- Bersihkan storage draf pasca submit sukses.
 
-#### [NEW] [DisposisiLaporanScreen.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/screens/DisposisiLaporanScreen.tsx)
-Formulir pelaporan hasil pelaksanaan disposisi:
-- Input isi laporan pelaksanaan.
-- Unggah file bukti lampiran scan/foto (menggunakan `DocumentPicker` atau `launchImageLibrary`).
-- Mengirim request `multipart/form-data` ke `POST /api/v1/disposisi/{id}/laporan`.
+#### [MODIFY] [DisposisiCreateScreen.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/screens/DisposisiCreateScreen.tsx)
+- Implementasi sistem draf menggunakan key `@draft_disposisi` untuk menyimpan form pembuatan disposisi baru (`selectedSuratId`, `selectedPegawaiIds`, `catatan`, `deadline`, `sifat`).
+- Menyediakan banner konfirmasi pemulihan dan tombol "Simpan Draf".
+- Bersihkan storage draf pasca submit sukses.
 
-#### [NEW] [DisposisiTanggapanScreen.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/screens/DisposisiTanggapanScreen.tsx)
-Formulir pimpinan untuk memberikan tanggapan atas laporan bawahan:
-- Pilihan status tanggapan: **Setuju (Approved)** atau **Tolak (Rejected)**.
-- Catatan tanggapan.
-
-#### [MODIFY] [SuratMasukDetailScreen.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/screens/SuratMasukDetailScreen.tsx)
-Menambahkan tombol **Buat Disposisi** di baris aksi bawah (atau di bawah metadata surat) yang mengarahkan user ke screen `DisposisiCreate` dengan parameter `surat_masuk_id`.
+#### [MODIFY] [DisposisiLaporanScreen.tsx](file:///root/persuratan/persuratan/InOfficePersuratan/src/screens/DisposisiLaporanScreen.tsx)
+- Impor `launchCamera` dari `react-native-image-picker`.
+- Tambahkan tombol aksi "📷 Ambil Foto" di barisan pilihan dokumen bukti pendukung.
+- Ketukan pada tombol akan memicu kamera, lalu meng-append berkas gambar yang dihasilkan ke dalam daftar file bukti (`selectedFiles`).
 
 ---
 
 ## Verification Plan
 
 ### Automated Tests
-- Type checking: `npx tsc --noEmit` di folder `InOfficePersuratan`.
-- Code linting: `npm run lint`.
+- Type Checking: `npx tsc --noEmit` di folder `InOfficePersuratan`.
+- Code Linting: `npm run lint`.
 
 ### Manual Verification
-- **Akses & Navigasi**: Memastikan menu Tab Disposisi memuat daftar dengan lancar.
-- **Delegasi Surat (Pimpinan)**:
-  1. Masuk ke Surat Masuk Detail, klik **Buat Disposisi**.
-  2. Pilih penerima (bisa multi-select), isi instruksi, dan tetapkan tanggal deadline.
-  3. Kirim dan pastikan dialihkan ke daftar disposisi keluar.
-- **Penerimaan & Laporan (Bawahan)**:
-  1. Login sebagai penerima disposisi, pastikan disposisi baru memiliki indikator belum dibaca.
-  2. Klik item untuk membuka detail (pastikan status dibaca terupdate di server).
-  3. Klik **Kirim Laporan**, isi teks laporan, unggah file foto bukti, lalu klik kirim.
-- **Persetujuan (Pimpinan)**:
-  1. Pimpinan menerima notifikasi/melihat laporan di detail disposisi keluar.
-  2. Klik **Tanggapi Laporan**, pilih **Setuju**, masukkan catatan.
-  3. Pastikan status disposisi berubah menjadi **Selesai**.
+1. **Verifikasi Kamera**:
+   - Buka form Surat Masuk Baru / Surat Keluar Baru / Kirim Laporan Disposisi.
+   - Klik tombol kamera, izinkan akses kamera, lalu ambil foto. Pastikan berkas foto berhasil dimasukkan sebagai lampiran.
+2. **Verifikasi Draf Offline**:
+   - Buka form Surat Masuk Baru, isi beberapa kolom data, lalu klik tombol **"Simpan Draf"**.
+   - Kembali ke Dashboard, lalu masuk kembali ke form Surat Masuk.
+   - Verifikasi banner pemulihan tampil di bagian atas. Klik **"Pulihkan"**, pastikan seluruh data terisi kembali sesuai draf.
+   - Kirim formulir hingga sukses, masuk kembali ke formulir tersebut dan pastikan draf sudah bersih (banner tidak muncul kembali).
+3. **Verifikasi Shimmer Effect**:
+   - Lakukan navigasi ke Dashboard, Surat Masuk, Surat Keluar, Disposisi, Notifikasi, dan Laporan.
+   - Perhatikan efek transisi loading awal. Pastikan kerangka shimmer skeleton tampil mulus dan rapi sebelum digantikan data riil.
